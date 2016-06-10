@@ -9,6 +9,16 @@ class Item < ActiveRecord::Base
 	  parent.try(:name)
 	end
 
+	def getBreadcrumbParents
+		parents_arr = []
+		runner = self
+		while runner.has_parent?
+			parents_arr.unshift(runner.parent) # push item at beginning of array
+			runner = runner.parent
+		end
+		return parents_arr
+	end
+
 	def getChildren
 		childrenArr = self.children
 		children = []

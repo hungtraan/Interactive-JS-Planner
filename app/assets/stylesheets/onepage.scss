@@ -2,6 +2,12 @@
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
 
+@import "compass/css3";
+
+// Cube Loader variables
+$size          : 35px;
+$primary-color : #00b7f1;
+
 .wrapper {
     padding-left: 0;
     -webkit-transition: all 0.5s ease;
@@ -40,6 +46,26 @@
     width: 100%;
     position: absolute;
     padding: 15px;
+
+	[contenteditable]:hover:after {
+		content: ' Click to view detail/edit';
+		font-style: italic;
+		font-size: 12px;
+		color: #ccc;
+	}
+
+	[contenteditable]:hover, [contenteditable]:focus {
+		background: #FFFFD3;
+	}
+
+	[contenteditable]:focus {
+		padding: 5px;
+	}
+
+	[contenteditable]:focus:after {
+		content: '';
+	}
+
     .breadcrumb-onepage{
 		list-style: none; 
 		overflow: hidden; 
@@ -47,33 +73,21 @@
 		// font: 18px Helvetica, Arial, Sans-Serif;
 		li{
 			float: left;
-			// color: white;
 			text-decoration: none; 
 			text-align: center;
 			padding: 10px 0 10px 30px;
-			// background: brown; /* fallback color */
-			// background: hsla(34,85%,35%,1); 
 			position: relative; 
 			display: block;
 			float: left;
 			
 			a{
-				// background: brown; /* fallback color */
-				// background: hsla(34,85%,35%,1); 
-				// color: white;
 				text-decoration: underline;
-				// &:hover { background: hsla(34,85%,25%,1); }
 				&:after{
 					content: " "; 
 					display: block; 
 					width: 0; 
 					height: 0;
-					// border-top: 50px solid transparent; /* Go big on the size, and let overflow hide */
-					// border-bottom: 50px solid transparent;
-					// border-left: 30px solid hsla(34,85%,35%,1);
 					position: absolute;
-					// top: 50%;
-					// margin-top: -50px; 
 					left: 100%;
 					z-index: 2; 
 				}
@@ -83,20 +97,12 @@
 					display: block; 
 					width: 100%; 
 					height: 100%;
-					// border-top: 50px solid transparent;       
-					// border-bottom: 50px solid transparent;
-					// border-left: 30px solid white;
 					position: absolute;
-					// top: 50%;
-					// margin-top: -50px; 
 					margin-left: 1px;
 					left: 70%;
 					z-index: 1; 
 				}
 			}	
-			
-			// &:hover { background: hsla(34,85%,25%,1); }
-			// &:hover:after { border-left-color: hsla(34,85%,25%,1) !important; }
 			&:first-child {
 				padding-left: 0px;
 			}
@@ -112,7 +118,8 @@
 	span.item-name{
 		cursor: pointer;
 		&.selected{
-			text-decoration: underline;
+			// text-decoration: underline;
+			font-weight: bold;
 		}
 	}
 
@@ -120,6 +127,132 @@
 		border-left: 1px solid #999;
 		&.closed{
 			display: none;
+		}
+	}
+
+	.loader{
+	    bottom: 75px;
+	    position: fixed;
+	    right: 40px;
+		display: none;
+
+	    &.enabled{
+	    	display: block;
+	    }
+	    
+		//cube only
+		.cube-folding{
+		  width: $size;
+		  height: $size;
+		  display: inline-block;
+		  @include transform(rotate(45deg));
+		  font-size: 0;
+		  span{
+		    position: relative;
+		    width: $size/2;
+		    height: $size/2;
+		    @include transform(scale(1.1));
+		    display: inline-block;
+		    &::before{
+		      content: '';
+		      background-color: $primary-color;
+		      position: absolute;
+		      left: 0;
+		      top: 0;
+		      display: block;
+		      width: $size/2;
+		      height: $size/2;
+		      -moz-transform-origin: 100% 100%;
+		      -ms-transform-origin: 100% 100%;
+		      -webkit-transform-origin: 100% 100%;
+		      transform-origin: 100% 100%;
+		      @include animation(folding 2.50s infinite linear both);
+		    }
+		  }
+		  .leaf2{
+		    @include transform(rotateZ(90deg) scale(1.1));
+		    &::before{
+		      @include animation-delay(.30s);
+		      background-color: darken($primary-color, 5%);
+		    }
+		  }
+		  .leaf3{
+		    @include transform(rotateZ(270deg) scale(1.1) );
+		    &::before{
+		      @include animation-delay(.90s);
+		      background-color: darken($primary-color, 5%);
+		    }
+		  }
+		  .leaf4{
+				@include transform(rotateZ(180deg) scale(1.1));
+				&::before{
+				  @include animation-delay(.60s);
+				  background-color: darken($primary-color, 10%);
+				}
+		  	}
+		}
+
+		//animation
+		@include keyframes(folding, folding animation) {
+		  0%, 10%{
+		    @include transform(perspective(140px) rotateX(-180deg));
+		    @include opacity(0);
+		  }
+		  25%, 75%{
+		    @include transform(perspective(140px) rotateX(0deg));
+		    @include opacity(1);
+		  }
+		  90%, 100%{
+		    @include transform(perspective(140px) rotateY(180deg)); 
+		    @include opacity(0);
+		  }
+		}
+
+		//with loading text and shadow
+		.cube-wrapper{  
+			margin-top: -$size;
+			margin-left: -$size;
+			width: $size*2;
+			height: $size*2;
+			text-align: center;
+			//shadow
+			&:after{
+				content: '';
+				position: absolute;
+				left: 0;
+				right: 0;
+				bottom: -20px;
+				margin: auto;
+				width: $size*1.8;
+				height: 6px;
+				margin-left: -$size;
+				background-color: rgba(black,.1);
+				@include filter(blur(2px));
+				@include border-radius(100%);
+				z-index: 1;
+				@include animation(shadow 0.5s ease infinite alternate);
+			}
+			.loading{
+				font-size: 12px;
+				letter-spacing: 0.1em;
+				display: block;
+				color: $primary-color;
+				position: relative;
+				top: $size/2;
+				z-index: 2;
+				@include animation(text 0.5s ease infinite alternate);
+			}
+		}
+		@include keyframes(text, text animation) {
+			100%{
+				top: ($size/2) + 10;
+			}
+		}
+		@include keyframes(shadow, shadow animation) {
+			100%{
+				bottom: -18px; 
+				width: $size*2;
+			}
 		}
 	}
 }
@@ -151,6 +284,7 @@
   > .sidebar-brand {
     // height: 65px;
     font-size: 18px;
+    font-weight: 700;
     line-height: 60px;
     a {
       color: #fff;

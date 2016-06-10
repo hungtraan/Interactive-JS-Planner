@@ -6,7 +6,7 @@ Rails.application.routes.draw do
 
   match 'get_children' => 'onepage#getChildren', via: :post
   match 'get_detail' => 'onepage#getDetail', via: :post
-  
+  match 'update_individual_detail' => 'onepage#updateIndividualDetail', via: :post
   # You can have the root of your site routed with "root"
   # root 'welcome#index'
 

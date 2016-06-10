@@ -22,15 +22,33 @@ class OnepageController < ApplicationController
 	def getDetail
 		itemId = params[:item_id]
 		thisItem = Item.find(itemId)
-		response = thisItem
+		breadcrumbParents = thisItem.getBreadcrumbParents
+		response = []
+		response.push(thisItem)
+		response.push(breadcrumbParents)
+		# p response
 		respond_to do |format|
           format.json {
             render :json => response
           }
         end
     end
-    
-	def updateDetail
+
+	def updateIndividualDetail
+		itemId = params[:item_id]
+		detail = params[:detail]
+		val = params[:value]
+		if Item.exists?(itemId)
+			itemToUpdate = Item.find(itemId)
+
+			if itemToUpdate && itemToUpdate[detail] != val
+				itemToUpdate[detail] = val
+				itemToUpdate.save
+			end
+		end
+		
+
+		head 200, content_type: "text/html"
 	end
 
 	
