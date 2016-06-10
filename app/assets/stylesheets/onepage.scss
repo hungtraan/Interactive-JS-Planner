@@ -1,0 +1,196 @@
+// Place all the styles related to the onepage controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+.wrapper {
+    padding-left: 0;
+    -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+    &.toggled {
+ 	   padding-left: 250px;
+ 	    &#sidebar-wrapper {
+		    width: 250px;
+		}
+		&#page-content-wrapper {
+		    position: absolute;
+		    margin-right: -250px;
+		}
+ 	}
+}
+
+#sidebar-wrapper {
+    z-index: 1000;
+    position: fixed;
+    left: 250px;
+    width: 0;
+    height: 100%;
+    margin-left: -250px;
+    overflow-y: auto;
+    background: #000;
+    -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+}
+
+
+#page-content-wrapper {
+    width: 100%;
+    position: absolute;
+    padding: 15px;
+    .breadcrumb-onepage{
+		list-style: none; 
+		overflow: hidden; 
+	    padding-left: 0px;
+		// font: 18px Helvetica, Arial, Sans-Serif;
+		li{
+			float: left;
+			// color: white;
+			text-decoration: none; 
+			text-align: center;
+			padding: 10px 0 10px 30px;
+			// background: brown; /* fallback color */
+			// background: hsla(34,85%,35%,1); 
+			position: relative; 
+			display: block;
+			float: left;
+			
+			a{
+				// background: brown; /* fallback color */
+				// background: hsla(34,85%,35%,1); 
+				// color: white;
+				text-decoration: underline;
+				// &:hover { background: hsla(34,85%,25%,1); }
+				&:after{
+					content: " "; 
+					display: block; 
+					width: 0; 
+					height: 0;
+					// border-top: 50px solid transparent; /* Go big on the size, and let overflow hide */
+					// border-bottom: 50px solid transparent;
+					// border-left: 30px solid hsla(34,85%,35%,1);
+					position: absolute;
+					// top: 50%;
+					// margin-top: -50px; 
+					left: 100%;
+					z-index: 2; 
+				}
+				&:before { 
+					content: ">"; 
+					color:#000;
+					display: block; 
+					width: 100%; 
+					height: 100%;
+					// border-top: 50px solid transparent;       
+					// border-bottom: 50px solid transparent;
+					// border-left: 30px solid white;
+					position: absolute;
+					// top: 50%;
+					// margin-top: -50px; 
+					margin-left: 1px;
+					left: 70%;
+					z-index: 1; 
+				}
+			}	
+			
+			// &:hover { background: hsla(34,85%,25%,1); }
+			// &:hover:after { border-left-color: hsla(34,85%,25%,1) !important; }
+			&:first-child {
+				padding-left: 0px;
+			}
+		}
+
+	}
+	
+	.item-expander.glyphicon{ 
+		margin-right: 5px;
+		font-size: 12px;
+	}
+
+	span.item-name{
+		cursor: pointer;
+		&.selected{
+			text-decoration: underline;
+		}
+	}
+
+	.object-editor{
+		border-left: 1px solid #999;
+		&.closed{
+			display: none;
+		}
+	}
+}
+
+.sidebar-nav {
+  position: absolute;
+  top: 0;
+  width: 250px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li {
+    text-indent: 20px;
+    line-height: 40px;
+    a {
+      display: block;
+      text-decoration: none;
+      color: #999999;
+      &:hover {
+        text-decoration: none;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.2);
+      }
+      &:active, &:focus {
+        text-decoration: none;
+      }
+    }
+  }
+  > .sidebar-brand {
+    // height: 65px;
+    font-size: 18px;
+    line-height: 60px;
+    a {
+      color: #fff;
+      &:hover {
+        color: #ccc;
+        background: none;
+      }
+    }
+    h3 {
+    	color: #fff;
+    }
+  }
+}
+
+footer{
+	position: fixed;
+	bottom:0;
+	width: 100%;
+}
+
+
+@media (min-width: 768px) {
+  .wrapper {
+    padding-left: 250px;
+    &.toggled {
+      padding-left: 0;
+      #sidebar-wrapper {
+	    width: 0;
+	  }
+	  #page-content-wrapper {
+	    position: relative;
+	    margin-right: 0;
+	  }
+    }
+  }
+  #sidebar-wrapper {
+    width: 250px;
+  }
+  #page-content-wrapper {
+    padding: 20px;
+    position: relative;
+  }
+}

@@ -1,0 +1,97 @@
+<nav class="navbar navbar-inverse">
+	<div class="container">
+		<div class="navbar-header">
+			<a class="navbar-brand" href="#">Object Viewer</a>
+		</div>
+	</div>
+</nav>
+
+<div class="wrapper">
+		<!-- Sidebar -->
+        <div id="sidebar-wrapper">
+            <ul class="sidebar-nav">
+                <li class="sidebar-brand">
+                    <h3>Tags</h3>
+                </li>
+                <li class="tags">
+                    <a href="#">Dummy tag</a>
+                </li>
+                <li class="tags">
+                    <a href="#">Dummy tag</a>
+                </li>
+                <li class="tags">
+                    <a href="#">Dummy tag</a>
+                </li>
+
+                <li class="sidebar-brand">
+                    <h3>Filters</h3>
+                </li>
+                
+                <li class="filters">
+                    <a href="#">Dummy</a>
+                </li>
+                <li class="filters">
+                    <a href="#">Dummy</a>
+                </li>
+                <li class="filters">
+                    <a href="#">Dummy</a>
+                </li>
+                <li class="filters">
+                    <a href="#">Dummy</a>
+                </li>
+            </ul>
+        </div>
+        <!-- /#sidebar-wrapper -->
+        <div id="page-content-wrapper">
+            <div class="container-fluid">
+                <div class="row">
+					<div class="col-md-12 object-tree">
+					<!-- <a href="#menu-toggle" class="btn btn-default" id="menu-toggle">Toggle Menu</a> -->
+						<!-- <h3>Viewer</h3> -->
+						<ul class="breadcrumb-onepage">
+							<li><a href="#">Parent</a></li>
+							<li><a href="#">Child</a></li>
+							<li class="active">Data</li>
+						</ul>
+						<div class="tree">
+							<% @itemsWithNoParent.each do |item| 
+								has_children = item.has_children? %>
+							<div class="item" data-itemid="<%= item.id %>">
+							<i class="item-expander glyphicon glyphicon-plus"<% if(!has_children) %> style="visibility:hidden;" <% end %>></i>
+								<span class="item-name"><%= item.name %></span>
+							
+								<% if(has_children) %>
+									<div class='collapse'></div> 
+								<% end %>
+							</div>
+							<% end %>
+							
+						</div>
+					</div>
+				<div class="object-editor closed">
+					<p>
+						<span>ID:</span>
+						<span class="item-id"></span>
+					</p>
+					<p>
+						<span>Name:</span>
+						<span class="item-name"></span>
+					</p>
+					<p>
+						<span>Parent:</span>
+						<span class="item-parent"></span>
+					</p>
+					<p>
+						<span>Description:</span>
+						<span class="item-desc"></span>
+					</p>
+					
+				</div>
+			</div>
+		</div>
+	
+	<footer>
+		<hr>
+        <p>© 2016 Flashstarts, Inc.</p>
+    </footer>
+</div>
