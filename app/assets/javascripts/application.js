@@ -16,10 +16,11 @@
 //= require bootstrap-sprockets
 //= require_tree .
 
-//http://stackoverflow.com/questions/21337393/bootstrap-load-collapse-panel-with-ajax
+// http://stackoverflow.com/questions/21337393/bootstrap-load-collapse-panel-with-ajax
+localCacheTree = {};
+localCacheDetail = {};
 
 $('document').ready(function() {
-
 	var loader = $('.loader');
 	$('.tree').on('click','span.item-name', function(){
 		$('span.item-name').removeClass('selected');
@@ -34,21 +35,29 @@ $('document').ready(function() {
 			var item_id = $(this).parent('div.item').data('itemid');
 			var data;
 			if (item_id == '') {return;}
-			loader.addClass('enabled');
-			$.ajax({ // Populate bar chart and data table
-	            method: "POST",
-	            async: false,
-	            url: "/get_detail",
-	            data: {
-	                item_id: item_id
-	            },
-	            success: function(json) {
-	            	loader.removeClass('enabled');
-	            	data=json;
-	            	// console.log(json);
-	            }
-	        });
-
+			loader.addClass('enabled'); // Show loader animation if the request takes too long
+			if (localCacheTree[item_id]){
+				loader.removeClass('enabled'); // Hide loader
+				data = localCacheTree[item_id];
+			}
+			else{
+				// GET ajax request to get details of the selected item
+				$.ajax({
+		            method: "GET",
+		            async: false,
+		            url: "/get_detail",
+		            data: {
+		                item_id: item_id
+		            },
+		            success: function(json) {
+		            	loader.removeClass('enabled'); // Hide loader
+		            	data=json;
+		            	localCacheTree[item_id] = data;
+		            	// console.log(json);
+		            }
+		        });
+			}
+			
 	        if(data!=undefined){
 	        	var object = data[0];
 	        	var parents = data[1];
@@ -67,33 +76,46 @@ $('document').ready(function() {
 				$('.breadcrumb-onepage').html("");
 				$('.breadcrumb-onepage').append(breadcrumb_li);
 				$('.breadcrumb-onepage').append(thisItem_li);
-
 	        }
 		}
 		$(this).addClass('selected');
 	});
 
+	// On click of expander button:
+	// Insert placeholder divs for children
+	// Get children either form local js cache or ajax GET
 	$('.item').on('click','i.item-expander', function(){
 		var toAppend = $(this).siblings('.collapse');
-		loader.addClass('enabled');
-		if(toAppend.is(':empty')){
+		loader.addClass('enabled'); // Show loader if the request takes too long
+		
+		if(toAppend.is(':empty')){ // Only fill in if the branch has not been filled
 			var item_id = $(this).parent('div.item').data('itemid');
 			var data;
-			$.ajax({ // Populate bar chart and data table
-	            method: "POST",
-	            async: false,
-	            url: "/get_children",
-	            data: {
-	                item_id: item_id
-	            },
-	            success: function(json) {
-	            	loader.removeClass('enabled');
-	            	data=json;
-	            }
-	        });
+
+			if (localCacheDetail[item_id]){
+				loader.removeClass('enabled'); // Hide loader
+				data = localCacheDetail[item_id];
+			}
+			else{
+				// GET ajax request to get children list
+				$.ajax({
+		            method: "GET",
+		            async: false,
+		            url: "/get_children",
+		            data: {
+		                item_id: item_id
+		            },
+		            success: function(json) {
+		            	loader.removeClass('enabled'); // Hide loader
+		            	data=json;
+		            	localCacheDetail[item_id] = data;
+		            }
+		        });
+			}
 
 	        var children_html = "";
 
+	        // Display HTML of children
 	        if(data!=undefined){
 	        	data.forEach(function(item){
 	        		children_html+="<div class=\"item\" data-itemid=\""+ item.id +"\">";
@@ -115,80 +137,174 @@ $('document').ready(function() {
 		toAppend.collapse('toggle');
 	});
 
+	// Show and hide plus/minus sign after collapsed/expanded
 	$('.item').on('show.bs.collapse','.collapse', function (e) {       
 		$(this).siblings('i').toggleClass('glyphicon-plus glyphicon-minus');
-    })
+    });
     $('.item').on('hide.bs.collapse', '.collapse', function (e) {
 		$(this).siblings('i').toggleClass('glyphicon-plus glyphicon-minus');
-    })
+    });
+
+    // Create item function
+    // @input: name, parent_id
+    var createItem = function(element, name, parent_id){
+    	var newItemId = null;
+    	$.ajax({
+    		data: {
+    			item_name: name,
+    			parent_id: parent_id, 
+    		},
+    		url: "/create_item",
+    		method: "POST",
+    		success: function(json){
+    			if (json){
+    				newItemId = json.id;
+    				$(element).parent('div.item').attr('data-itemid',newItemId);
+    			}
+    		}
+    	});
+    };
 
 	// Live ajax save with HTML5 contenteditable
-	$('span[contenteditable]').focus(function(){
-		var originalDetail = $(this).text();
-
-		$(this).keydown(function(event){
-			var esc = event.which == 27,
-				nl = event.which == 13, //new line, Return key or Enter key
-				up = event.which == 38,
-				down = event.which == 40,
-				el = event.target, // element
-				input = el.nodeName != 'INPUT' && el.nodeName != 'TEXTAREA';
-
-			var element = $(el);
-			if (input) {
-				if (esc) {
-					// restore state
-					document.execCommand('undo');
-					el.blur();
-				} 
-				// Allow up and down key to move between items on the item tree
-				else if (down){
-					event.preventDefault();
-					el.blur();
-					element.parent('div.item').next().children('span.item-name').focus();
-		        } else if (up){
-		        	event.preventDefault();
-		        	el.blur();
-		        	element.parent('div.item').prev().children('span.item-name').focus();
-		        } 
-		        // Return/Enter key: Save data via ajax
-		        else if (nl) {
-					// save
-					if(originalDetail != el.innerHTML){
-						var data = {};
-						data['item_id'] = $(element).parent('div.item').data('itemid');
-						data['detail'] = el.getAttribute('data-name');
-						data['value'] = el.innerHTML;
-						// log(JSON.stringify(data));
-						
-						// Send an ajax request to update the field
-						$.ajax({
-							url: '/update_individual_detail',
-							data: data,
-							method: 'POST'
-						});
-						
-					} //if original != el.innerHTML
-					
-					el.blur();
-					event.preventDefault();
-
-					// Not working yet
-					// var newItemHtml = "<div class=\"item\" data-itemid=\"\">\
-					// 			<i class=\"item-expander glyphicon glyphicon-plus\" style=\"visibility:hidden;\"></i>\
-					// 				<span class=\"item-name\" contenteditable=\"true\" data-name=\"item-name\"></span>\
-					// 			</div>";
-					// $(newItemHtml).insertAfter((element.parent('div.item')));
-					// $(element.parent('div.item')).next().children('span.item-name').focus();
-					
+	// $('span[contenteditable=true]').focus() would not work
+	// since it does not recognize newly inserted elements
+	
+	var focusContentEditable = function(element){
+		console.log("Fired in: ", element);
+		var originalDetail = element.text();
+		
+		element.focusout(function(event){
+			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
+			// restore state
+			var contentText = element.text();
+			if( originalDetail == '' && contentText != originalDetail && $.trim(contentText) != ""){ // trim trailing spaces before comparison
+				var newItemName = contentText;
+				originalDetail = newItemName;
+				var newItemParent = element.parents('div.item')[1]; // 2 levels of parents
+				if (newItemParent == undefined){ // If level 0 items, no parent
+					var newItemParentId = null;
+				} else { // Items of Level > 0, get parentId to construct a new item object
+					var newItemParentId = $(newItemParent).data('itemid');
 				}
+				createItem(element, newItemName, newItemParentId);
+			} 
+			else if (contentText == originalDetail){
+				return;
+			}
+			else if ($.trim(contentText) == ""){
+				return;
+			}
+			else {
+				originalDetail = contentText;
+				updateItem(element);
+			}
+			return;
+		});
+
+		element.keydown(function(event){
+			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
+			var el = event.target;
+			var input = el.nodeName != 'INPUT' && el.nodeName != 'TEXTAREA';
+			// var element = $(el);
+			if (input) {	
+				switch(event.which) {
+			        case 38: // up
+			        	var prevItem = element.parent('div.item').prev().children('span.item-name');
+						if (prevItem.length){ // prevent el.blur if at end of list
+							event.preventDefault();
+							// el.blur();
+							prevItem.focus();
+						}
+			        	break;
+
+			        case 40: // down
+			        	var nextItem = element.parent('div.item').next().children('span.item-name');
+						if (nextItem.length){ // prevent el.blur if at end of list
+							event.preventDefault();
+							// el.blur();
+							nextItem.focus();
+						}
+			        	break;
+
+			        case 27: // esc
+			        	// restore state
+						document.execCommand('undo');
+						el.blur();
+			        	break;
+
+			        case 9: // tab
+			        	break;
+
+			        case 13: // new line
+			        	// Return/Enter key: 
+				        // 1. Save data via ajax
+				        // 2. Create new div.item > span.item-name to create new object
+
+				        // Start here:
+				        // 1. Save data if original != el.innerHTML
+				        event.preventDefault();
+				        var contentText = element.text();
+				        if(contentText != originalDetail && $.trim(contentText) != ""){ // trim trailing spaces before comparison
+								updateItem(element);
+						} 
+						// Only create new item if new line was empty
+						else if (originalDetail=='') {
+							var newItemName = contentText;
+							var newItemParent = element.parents('div.item')[1]; // 2 levels of parents
+							if (newItemParent == undefined){ // If level 0 items, no parent
+								var newItemParentId = null;
+							} else { // Items of Level > 0, get parentId to construct a new item object
+								var newItemParentId = $(newItemParent).data('itemid');
+							}
+							createItem(element, newItemName, newItemParentId);
+							originalDetail = newItemName;
+						}
+						
+						// el.blur();
+
+						// 2. Create new item below it
+						var newItemHtml = "<div class=\"item\" data-itemid=\"\">\
+									<i class=\"item-expander glyphicon glyphicon-plus\" style=\"visibility:hidden;\"></i>\
+										<span class=\"item-name\" contenteditable=\"true\" data-name=\"item-name\"></span>\
+									</div>";
+						$(newItemHtml).insertAfter((element.parent('div.item')));
+						var newlyCreatedItem = $(element.parent('div.item')).next().children('span.item-name');
+						newlyCreatedItem.focus();
+						focusContentEditable(newlyCreatedItem);
+			        	break;
+
+			        default: return; // exit this handler for other keys
+			    }
 			}
 		});
+	};
+
+	$('.item').on('focus','span',function(e){
+		var element = $(this);
+		focusContentEditable(element);
 	});
+	
+	// Update detail of item
+	var updateItem = function(element){
+		var data = {};
+		var itemId = $(element).parent('div.item').data('itemid');
+		
+		// If there is an itemId, this is an item already created
+		// so update its information
+		if (itemId){
+			data['item_id'] = itemId;
+			data['detail'] = $(element).data('name');
+			data['value'] = element.text();
+			// Send an ajax request to update the field
+			$.ajax({
+				url: '/update_individual_detail',
+				data: data,
+				method: 'POST'
+			});
+		}
+
+		// Purge cache after update
+		localCacheTree[itemId] = null;
+		localCacheDetail[itemId] = null;
+	};
 });
-
-
-
-function log(s) {
-  console.log('value changed to: ' + s);
-}

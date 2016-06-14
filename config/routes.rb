@@ -4,9 +4,10 @@ Rails.application.routes.draw do
 
   root 'onepage#index'
 
-  match 'get_children' => 'onepage#getChildren', via: :post
-  match 'get_detail' => 'onepage#getDetail', via: :post
+  match 'get_children' => 'onepage#getChildren', via: :get
+  match 'get_detail' => 'onepage#getDetail', via: :get
   match 'update_individual_detail' => 'onepage#updateIndividualDetail', via: :post
+  match 'create_item' => 'onepage#createItem', via: :post
   # You can have the root of your site routed with "root"
   # root 'welcome#index'
 

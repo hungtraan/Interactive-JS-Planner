@@ -50,7 +50,7 @@
 					<!-- <h3>Viewer</h3> -->
 					<div class="tree">
 						<% @itemsWithNoParent.each do |item| 
-							has_children = item.has_children? %>
+							has_children = item.hasChildren? %>
 						<div class="item" data-itemid="<%= item.id %>">
 						<i class="item-expander glyphicon glyphicon-plus"<% if(!has_children) %> style="visibility:hidden;" <% end %>></i>
 							<span class="item-name" contenteditable="true" data-name="name"><%= item.name %></span>
