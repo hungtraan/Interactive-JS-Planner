@@ -47,12 +47,11 @@ $primary-color : #00b7f1;
     position: absolute;
     padding: 15px;
 
-	[contenteditable]:hover:after {
+	div[contenteditable]:hover:after {
 		content: ' Click to view detail/edit';
 		font-style: italic;
-		// font-size: 12px;
+		font-size: 12px;
 		color: #ccc;
-		width: 200px;
 	}
 
 	[contenteditable]:hover, [contenteditable]:focus {

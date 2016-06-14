@@ -83,6 +83,14 @@ class OnepageController < ApplicationController
 		head 200, content_type: "text/html"
 	end
 
-	
+	def updateParentChildren
+		itemId = params[:item_id]
+		parentId = params[:parent_id]
+		if Item.exists?(itemId)
+			item = Item.find(itemId)
+			item.setParent(parentId) # setParent method handles parentId = nil
+		end
+		head 200, content_type: "text/html"
+	end	
 
 end

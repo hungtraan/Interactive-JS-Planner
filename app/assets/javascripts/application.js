@@ -38,53 +38,7 @@ $(document).ready(function() {
 			var data;
 			if (item_id == '') {return;}
 			loader.addClass('enabled'); // Show loader animation if the request takes too long
-			if (localCacheTree[item_id]){
-				loader.removeClass('enabled'); // Hide loader
-				data = localCacheTree[item_id];
-			}
-			else{
-				// GET ajax request to get details of the selected item
-				$.ajax({
-		            method: "GET",
-		            async: false,
-		            url: "/get_detail",
-		            data: {
-		                item_id: item_id
-		            },
-		            success: function(json) {
-		            	loader.removeClass('enabled'); // Hide loader
-		            	data=json;
-		            	localCacheTree[item_id] = data;
-		            	// console.log(json);
-		            }
-		        });
-			}
-			
-	        if(data!=undefined){
-	        	var object = data[0];
-	        	var parents = data[1];
-	        	$('.object-editor span.item-id').html(object.id);
-				$('.object-editor span.item-name').html(object.name);
-				$('.object-editor span.item-parent').html(object.parent_name);
-				$('.object-editor span.item-desc').html(object.description);
-				$('.object-editor span.item-by').html(object.by_name);
-
-				$('.object-editor span.item-id').attr('data-itemid', item_id);
-				$('.object-editor span.item-name').attr('data-itemid', item_id);
-				$('.object-editor span.item-parent').attr('data-itemid', item_id);
-				$('.object-editor span.item-desc').attr('data-itemid', item_id);
-				$('.object-editor span.item-by').attr('data-itemid', item_id);
-
-				var breadcrumb_li = "";
-				var parents_li = "<li><a class=\"parents\" href=\"#\">"
-				parents.forEach(function(item){
-					breadcrumb_li += parents_li + item.name + "</a></li>";
-				});
-				var thisItem_li = "<li class=\"selected\">" + object.name + "</li>";
-				$('.breadcrumb-onepage').html("");
-				$('.breadcrumb-onepage').append(breadcrumb_li);
-				$('.breadcrumb-onepage').append(thisItem_li);
-	        }
+			loadDetail($(this));
 		}
 		$(this).addClass('selected');
 	});
@@ -152,7 +106,7 @@ $(document).ready(function() {
 			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
 			// restore state
 			var contentText = element.text();
-			console.log(originalDetail, contentText);
+			
 			if (element.hasClass('tree_label')){
 				if (originalDetail == '' && contentText != originalDetail && $.trim(contentText) != ""){ // trim trailing spaces before comparison
 					var newItemName = contentText;
@@ -168,12 +122,14 @@ $(document).ready(function() {
 					return;
 				}
 			}
-			else if (contentText == originalDetail){
+			
+			if (contentText == originalDetail){
 				return;
 			}
 			else {
 				originalDetail = contentText;
 				updateItem(element);
+				loadDetail(element, false);
 			}
 			return;
 		});
@@ -184,68 +140,130 @@ $(document).ready(function() {
 			var input = el.nodeName != 'INPUT' && el.nodeName != 'TEXTAREA';
 
 			if (input) {	
-				switch(event.which) {
-			        case 38: // up
-			        	var prevItem = element.parent().prev().children('div.tree_label');
-						if (prevItem.length){ // prevent el.blur if at end of list
-							event.preventDefault();
-							// el.blur();
-							prevItem.focus();
-						}
-			        	break;
+				if (element.hasClass('tree_label') && event.which == 9 && event.shiftKey){  // shift + tab
+					event.preventDefault();
+					// Move item back out 1 level
+					
+					// Exception: No parent possible
+					var treeElement = element.parent().parent();
+					if (treeElement.hasClass('.tree')){ return; }
 
-			        case 40: // down
-			        	var nextItem = element.parent().next().children('div.tree_label');
-						if (nextItem.length){ // prevent el.blur if at end of list
-							event.preventDefault();
-							// el.blur();
-							nextItem.focus();
-						}
-			        	break;
+					var thisItem_li = element.parent('li'),
+						itemId = thisItem_li.data('itemid');
+					var parentItem = thisItem_li.parent('ul').parent('li'),
+						parentId = parentItem.parent('ul').parent('li').data('itemid');
+					
+					// remove expander
+					// Special Case: Delete tree structure if the element is the only child
+					if (element.parent().siblings().length == 0){
+						var toRemove = thisItem_li.parent('ul').siblings('input, label');
+						console.log(toRemove);
+						toRemove.remove();
+						thisItem_li.parent('ul').remove();
+					}
 
-			        case 27: // esc
-			        	// restore state
-						document.execCommand('undo');
-						el.blur();
-			        	break;
+					// move after its parent
+					$(parentItem).after(thisItem_li);
 
-			        case 9: // tab
-			        	// Either:
-			        	// 1. Make an item a child of its prev sibling
-			        	// 2. Empty new line: Create new child
+					// Update the item information
+					if (parentId == undefined) { parentId = null;}
+					setChildrenParent(itemId, parentId);
+					loadDetail(element,false); // false == purge cache, get new info
+					// return;
+					// Problem remaining: Cannot tab it after shift-tab 
+				}
+				else if (element.hasClass('tree_label') && event.which == 9 && !event.shiftKey) { // tab without shift
+		        	event.preventDefault();
 
-			        	break;
+					// Exception: Top of list, no previous sibling
+					var prevItem = element.parent().prev();
+					if (prevItem.length == 0){ return; }
 
-			        case 13: // new line
-			        	// Return/Enter key: 
-				        
-				        // 1. Save data if original != el.innerHTML
-			        	event.preventDefault();
-				        var contentText = element.text();
-				        
-				        if(contentText != originalDetail && $.trim(contentText) != ""){ // trim trailing spaces before comparison
-								updateItem(element);
-						} 
-						// Only create new item if new line was empty
-						// else if (originalDetail=='') {
-						// 	var newItemName = contentText;
-						// 	var newItemParentId = $(element).parent('.item').data('itemid');
-						// 	createItem(element, newItemName, newItemParentId);
-						// 	originalDetail = newItemName;
-						// }
-						if (element.hasClass('tree_label')){
-							// 2. Create new item below it
-							var newItemHtml = "<li class=\"item\" data-itemid=\"\" ><div class=\"tree_label item-name\" data-itemid=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
-							$(newItemHtml).insertAfter(element.parent());
-							var newlyCreatedItem = element.parent().next().children('div.tree_label');
-							newlyCreatedItem.focus();
-							focusContentEditable(newlyCreatedItem);
+					var itemId = element.data("itemid");
+					var parentId = prevItem.data("itemid");
 
-				        }
-			        	break;
+					// Only insert ul place holder if prev sibling does not have any child
+					if (prevItem.children('ul.children').length == 0){
+						var toPrepend = '<input type="checkbox" data-itemid="' + parentId + '" id="c' + parentId + '"><label class="expander" for="c'+parentId+'"></label>';
+						$(toPrepend).prependTo(element.parent().prev());
+						
+						var toAppend = '<ul class="children"></ul>';
+						$(toAppend).appendTo(element.parent().prev());
+					}
 
-			        default: return; // exit this handler for other keys
-			    }
+					// move itself
+					element.parent().appendTo(prevItem.children('ul.children'));
+					// expand the tree
+					element.parent().parent().siblings('input[type=checkbox]').prop('checked','true');
+					$.ajax({
+						url: '/update_parent_children',
+						method: "POST",
+						data: {
+							parent_id: parentId,
+							item_id: itemId,
+						},
+					});
+					setChildrenParent(itemId, parentId);
+					loadDetail(element,false); // false == purge cache, get new info
+					return;
+				}
+				else{
+					switch(event.which) {
+				        case 38: // up
+				        	var prevItem = element.parent().prev().children('div.tree_label');
+							if (prevItem.length){ // prevent el.blur if at end of list
+								event.preventDefault();
+								// el.blur();
+								prevItem.focus();
+							}
+				        	break;
+
+				        case 40: // down
+				        	var nextItem = element.parent().next().children('div.tree_label');
+							if (nextItem.length){ // prevent el.blur if at end of list
+								event.preventDefault();
+								// el.blur();
+								nextItem.focus();
+							}
+				        	break;
+
+				        case 27: // esc
+				        	// restore state
+							document.execCommand('undo');
+							el.blur();
+				        	break;
+
+				        case 13: // new line
+				        	// Return/Enter key: 
+					        
+					        // 1. Save data if original != el.innerHTML
+				        	event.preventDefault();
+					        var contentText = element.text();
+					        
+					        if(contentText != originalDetail && $.trim(contentText) != ""){ // trim trailing spaces before comparison
+									updateItem(element);
+							} 
+							// Only create new item if new line was empty
+							// else if (originalDetail=='') {
+							// 	var newItemName = contentText;
+							// 	var newItemParentId = $(element).parent('.item').data('itemid');
+							// 	createItem(element, newItemName, newItemParentId);
+							// 	originalDetail = newItemName;
+							// }
+							if (element.hasClass('tree_label')){
+								// 2. Create new item below it
+								var newItemHtml = "<li class=\"item\" data-itemid=\"\" ><div class=\"tree_label item-name\" data-itemid=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
+								$(newItemHtml).insertAfter(element.parent());
+								var newlyCreatedItem = element.parent().next().children('div.tree_label');
+								newlyCreatedItem.focus();
+								focusContentEditable(newlyCreatedItem);
+
+					        }
+				        	break;
+
+				        default: return; // exit this handler for other keys
+				    }
+				}
 			}
 		});
 	};
@@ -281,6 +299,58 @@ $(document).ready(function() {
     		}
     	});
     };
+
+    // Load detail of item
+    var loadDetail = function(element, useCache=true) {
+    	console.log('fired');
+    	var item_id = element.data('itemid');
+		if (localCacheTree[item_id] && useCache){
+			loader.removeClass('enabled'); // Hide loader
+			data = localCacheTree[item_id];
+		}
+		else{
+			// GET ajax request to get details of the selected item
+			$.ajax({
+	            method: "GET",
+	            async: false,
+	            url: "/get_detail",
+	            data: {
+	                item_id: item_id
+	            },
+	            success: function(json) {
+	            	loader.removeClass('enabled'); // Hide loader
+	            	data=json;
+	            	localCacheTree[item_id] = data;
+	            }
+	        });
+		}
+
+		if(data!=undefined){
+        	var object = data[0];
+        	var parents = data[1];
+        	$('.object-editor span.item-id').html(object.id);
+			$('.object-editor span.item-name').html(object.name);
+			$('.object-editor span.item-parent').html(object.parent_name);
+			$('.object-editor span.item-desc').html(object.description);
+			$('.object-editor span.item-by').html(object.by_name);
+
+			$('.object-editor span.item-id').attr('data-itemid', item_id);
+			$('.object-editor span.item-name').attr('data-itemid', item_id);
+			$('.object-editor span.item-parent').attr('data-itemid', item_id);
+			$('.object-editor span.item-desc').attr('data-itemid', item_id);
+			$('.object-editor span.item-by').attr('data-itemid', item_id);
+
+			var breadcrumb_li = "";
+			var parents_li = "<li><a class=\"parents\" href=\"#\">"
+			parents.forEach(function(item){
+				breadcrumb_li += parents_li + item.name + "</a></li>";
+			});
+			var thisItem_li = "<li class=\"selected\">" + object.name + "</li>";
+			$('.breadcrumb-onepage').html("");
+			$('.breadcrumb-onepage').append(breadcrumb_li);
+			$('.breadcrumb-onepage').append(thisItem_li);
+        }
+    }
 
 	// Update detail of item
 	var updateItem = function(element){
@@ -332,6 +402,17 @@ $(document).ready(function() {
 		// Purge cache after update
 		localCacheTree[itemId] = null;
 		localCacheDetail[itemId] = null;
+	};
+
+	var setChildrenParent = function(child_id, parent_id){
+		$.ajax({
+			url: '/update_parent_children',
+			method: "POST",
+			data: {
+				parent_id: parent_id,
+				item_id: child_id,
+			},
+		});
 	};
 });
 
