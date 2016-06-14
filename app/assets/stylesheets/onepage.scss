@@ -50,8 +50,9 @@ $primary-color : #00b7f1;
 	[contenteditable]:hover:after {
 		content: ' Click to view detail/edit';
 		font-style: italic;
-		font-size: 12px;
+		// font-size: 12px;
 		color: #ccc;
+		width: 200px;
 	}
 
 	[contenteditable]:hover, [contenteditable]:focus {
@@ -60,6 +61,8 @@ $primary-color : #00b7f1;
 
 	[contenteditable]:focus {
 		padding: 5px;
+		border: none;
+		outline: none;
 	}
 
 	[contenteditable]:focus:after {
@@ -115,13 +118,181 @@ $primary-color : #00b7f1;
 		font-size: 12px;
 	}
 
-	span.item-name{
-		cursor: pointer;
+	.item-name{
+		
 		&.selected{
 			// text-decoration: underline;
 			font-weight: bold;
 		}
 	}
+
+	.new-tree {
+		body {
+		  margin: 30px;
+		  font-family: sans-serif;
+		}
+
+		#fontSizeWrapper {
+		  font-size: 16px;
+		}
+
+		#fontSize {
+		  width: 100px;
+		  font-size: 1em;
+		}
+
+		/* ————————————————————–
+		  Tree core styles
+		*/
+
+		.tree {
+		  margin: 1em;
+		  input {
+		    position: absolute;
+		    clip: rect(0, 0, 0, 0);
+		    ~ ul {
+		    	display: none;
+				padding-left: 0px;
+				margin-top: -5px;
+				margin-left: -1px;
+
+		    }
+		    &:checked ~ ul {
+		      display: block;
+		    }
+		  }
+		  li {
+		    line-height: 1.2;
+		    position: relative;
+		    padding: 0 0 1em 1em;
+		    list-style: none;
+		    label.expander {
+			  	width: 1em;
+			  	height: 1em;
+			    background: #000;
+			    color: #fff;
+			    position: relative;
+			    z-index: 100;
+			    float: left;
+			    margin: 0 1em 0 -2em;
+			    width: 1em;
+			    height: 1em;
+			    border-radius: 1em;
+			    
+			    text-align: center;
+			    line-height: .9em;
+			    &:before{
+			    	cursor: pointer;
+			    	content: '+';
+			    }
+			    &:before:checked {
+			    	cursor: pointer;
+					content: '–';
+				}
+			  }
+		  }
+		  ul li {
+		    padding: 1em 0 0 1em;
+		  }
+		  > li:last-child {
+		    padding-bottom: 0;
+		  }
+		}
+
+		/* ————————————————————–
+		  Tree rows
+		*/
+
+		/* ————————————————————–
+		  Tree labels
+		*/
+
+		.tree_label {
+		  position: relative;
+		  display: inline-block;
+		  // background: #fff;
+		  &:last-child:before{
+		  	border-bottom: 1px solid #777;
+		  }
+		}
+
+		/* ————————————————————–
+		  Tree expanded icon
+		*/
+
+		:checked ~ label.expander:before {
+		  content: '–' !important;
+		}
+
+		:checked ~ .tree_label:after{
+			position: absolute;
+			bottom: 2px;
+			left: -1.5em;
+			display: block;
+			height: 0.5em;
+			width: 1em;
+			border-top: 1px solid #777;
+			border-right: 1px solid #777;
+			border-radius: 0 .3em 0 0;
+			content: '';
+		}
+		/* ————————————————————–
+		  Tree branches
+		*/
+
+		.tree li:before {
+		  position: absolute;
+		  top: 0;
+		  bottom: 0;
+		  left: -.5em;
+		  display: block;
+		  width: 0;
+		  border-left: 1px solid #777;
+		  content: "";
+		}
+
+		.tree_label{
+			&:before {
+				position: absolute;
+				top: 0;
+				left: -1.5em;
+				display: block;
+				height: 0.5em;
+				width: 1em;
+				border-bottom: 1px solid #777;
+				border-left: 1px solid #777;
+				border-radius: 0 0 0 .3em;
+				content: '';
+			}
+		}
+
+		div.tree_label{
+			&:before {
+				border-bottom: 0;
+			}
+			&:after{
+				border-bottom: 0;
+			}
+		}
+
+		.tree {
+		  li:last-child:before {
+		    height: 1em;
+		    bottom: auto;
+		  }
+		  > li:last-child:before {
+		    display: none;
+		  }
+		}
+
+		.tree_custom {
+		  display: block;
+		  background: #eee;
+		  padding: 1em;
+		  border-radius: 0.3em;
+		}
+	}
+	// end tree
 
 	.object-editor{
 		border-left: 1px solid #999;

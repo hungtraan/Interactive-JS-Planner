@@ -5,105 +5,128 @@
 		</div>
 	</div>
 </nav>
-
 <div class="wrapper">
 	<!-- Sidebar -->
-    <div id="sidebar-wrapper">
-        <ul class="sidebar-nav">
-            <li class="sidebar-brand">
-                <h3>Tags</h3>
-            </li>
-            <li class="tags">
-                <a href="#">Dummy tag</a>
-            </li>
-            <li class="tags">
-                <a href="#">Dummy tag</a>
-            </li>
-            <li class="tags">
-                <a href="#">Dummy tag</a>
-            </li>
-
-            <li class="sidebar-brand">
-                <h3>Filters</h3>
-            </li>
-            
-            <li class="filters">
-                <a href="#">Dummy</a>
-            </li>
-            <li class="filters">
-                <a href="#">Dummy</a>
-            </li>
-            <li class="filters">
-                <a href="#">Dummy</a>
-            </li>
-            <li class="filters">
-                <a href="#">Dummy</a>
-            </li>
-        </ul>
-    </div>
-    <!-- /#sidebar-wrapper -->
-    <div id="page-content-wrapper">
-        <div class="container-fluid">
-            <div class="row">
+	<div id="sidebar-wrapper">
+		<ul class="sidebar-nav">
+			<li class="sidebar-brand">
+				<h3>Tags</h3>
+			</li>
+			<li class="tags">
+				<a href="#">Dummy tag</a>
+			</li>
+			<li class="tags">
+				<a href="#">Dummy tag</a>
+			</li>
+			<li class="tags">
+				<a href="#">Dummy tag</a>
+			</li>
+			<li class="sidebar-brand">
+				<h3>Filters</h3>
+			</li>
+			
+			<li class="filters">
+				<a href="#">Dummy</a>
+			</li>
+			<li class="filters">
+				<a href="#">Dummy</a>
+			</li>
+			<li class="filters">
+				<a href="#">Dummy</a>
+			</li>
+			<li class="filters">
+				<a href="#">Dummy</a>
+			</li>
+		</ul>
+	</div>
+	<!-- /#sidebar-wrapper -->
+	<div id="page-content-wrapper">
+		<div class="container-fluid">
+			<div class="row">
+				<% if (false) %>
 				<div class="col-md-12 object-tree">
-				<!-- <a href="#menu-toggle" class="btn btn-default" id="menu-toggle">Toggle Menu</a> -->
-					<!-- <h3>Viewer</h3> -->
+					<!-- <a href="#menu-toggle" class="btn btn-default" id="menu-toggle">Toggle Menu</a> -->
 					<div class="tree">
-						<% @itemsWithNoParent.each do |item| 
-							has_children = item.hasChildren? %>
+						<% @itemsWithNoParent.each do |item|
+						has_children = item.hasChildren? %>
 						<div class="item" data-itemid="<%= item.id %>">
-						<i class="item-expander glyphicon glyphicon-plus"<% if(!has_children) %> style="visibility:hidden;" <% end %>></i>
+							<i class="item-expander glyphicon glyphicon-plus"<% if(!has_children) %> style="visibility:hidden;" <% end %>></i>
 							<span class="item-name" contenteditable="true" data-name="name"><%= item.name %></span>
-						
+							
 							<% if(has_children) %>
-								<div class='collapse'></div> 
+							<div class='collapse'></div>
 							<% end %>
 						</div>
 						<% end %>
 						
 					</div>
 				</div>
-			<div class="object-editor closed">
-				<ul class="breadcrumb-onepage">
-				</ul>
-				<p>
-					<span>ID:</span>
-					<span class="item-id" contenteditable="true" data-name="id"></span>
-				</p>
-				<p>
-					<span>Name:</span>
-					<span class="item-name" contenteditable="true" data-name="name"></span>
-				</p>
-				<p>
-					<span>Parent:</span>
-					<span class="item-parent" contenteditable="false" data-name="parent_name"></span>
-				</p>
-				<p>
-					<span>Description:</span>
-					<span class="item-desc" contenteditable="true" data-name="description"></span>
-				</p>
-				<p>
-					<span>Creator:</span>
-					<span class="item-by" contenteditable="true" data-name="by"></span>
-				</p>
-				
+				<% end %>
+				<div class="new-tree tree col-md-12">
+					<div id="fontSizeWrapper">
+						<label for="fontSize">Tree Zoom</label>
+						<input type="range" value="1" id="fontSize" step="0.1" min="1" max="2" />
+					</div>
+
+					<ul class="tree">
+						<% @itemsWithNoParent.each do |item|
+						has_children = item.hasChildren? %>
+							<li class="item" data-itemid="<%= item.id %>" >
+							<% if(has_children) %>
+								<input type="checkbox" data-itemid="<%= item.id %>" id="c<%= item.id %>"/>
+								<label class="expander" for="c<%= item.id %>"></label>
+								
+								<div class="tree_label item-name" data-itemid="<%= item.id %>" data-name="name" contenteditable="true"><%= item.name %></div>
+								<ul class="children"></ul>
+							<% else %>
+								<div class="tree_label item-name" data-itemid="<%= item.id %>" contenteditable="true" data-name="name"><%= item.name %></div>
+								<!-- <div class='collapse'></div> -->
+							<% end %>
+							</li>
+						<% end %>
+					</ul>
+				</div>
+				<div class="object-editor closed">
+					<ul class="breadcrumb-onepage">
+					</ul>
+					<p>
+						<span>ID:</span>
+						<span class="item-id" contenteditable="true" data-name="id" data-itemid></span>
+					</p>
+					<p>
+						<span>Name:</span>
+						<span class="item-name" contenteditable="true" data-name="name" data-itemid></span>
+					</p>
+					<p>
+						<span>Parent:</span>
+						<span class="item-parent" data-name="parent_name" data-itemid></span>
+					</p>
+					<p>
+						<span>Description:</span>
+						<span class="item-desc" contenteditable="true" data-name="description" data-itemid></span>
+					</p>
+					<p>
+						<span>Creator:</span>
+						<span class="item-by" contenteditable="true" data-name="by" data-itemid></span>
+					</p>
+					
+				</div>
+			</div>
+			<div class="loader">
+				<div class="cube-wrapper">
+					<div class="cube-folding">
+						<span class="leaf1"></span>
+						<span class="leaf2"></span>
+						<span class="leaf3"></span>
+						<span class="leaf4"></span>
+					</div>
+					<span class="loading" data-name="Loading">Loading</span>
+				</div>
 			</div>
 		</div>
-		<div class="loader">
-			<div class="cube-wrapper">
-			  <div class="cube-folding">
-			    <span class="leaf1"></span>
-			    <span class="leaf2"></span>
-			    <span class="leaf3"></span>
-			    <span class="leaf4"></span>
-			  </div>
-			  <span class="loading" data-name="Loading">Loading</span>
-			</div>
-		</div>
+		
+		<footer>
+			<hr>
+			<p>© 2016 Flashstarts, Inc.</p>
+		</footer>
 	</div>
-	
-	<footer>
-		<hr>
-        <p>© 2016 Flashstarts, Inc.</p>
-    </footer>
-</div>
