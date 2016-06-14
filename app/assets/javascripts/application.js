@@ -20,19 +20,21 @@
 localCacheTree = {};
 localCacheDetail = {};
 
-$('document').ready(function() {
+$(document).ready(function() {
 	var loader = $('.loader');
-	$('.tree').on('click','span.item-name', function(){
-		$('span.item-name').removeClass('selected');
+
+
+	$('.tree').on('click','.item-name', function(){
+		$('.item-name').removeClass('selected');
 		var editor = $('.object-editor');
 		if(!editor.hasClass('is-open')){
-			$('.object-tree').toggleClass('col-md-12 col-md-8');
+			$('.object-tree, .new-tree').toggleClass('col-md-12 col-md-8');
 			editor.removeClass('closed');
 			editor.toggleClass('col-md-4');
 			editor.addClass('is-open');
 		}
 		if(!$(this).hasClass('selected')){
-			var item_id = $(this).parent('div.item').data('itemid');
+			var item_id = $(this).data('itemid');
 			var data;
 			if (item_id == '') {return;}
 			loader.addClass('enabled'); // Show loader animation if the request takes too long
@@ -81,15 +83,18 @@ $('document').ready(function() {
 		$(this).addClass('selected');
 	});
 
-	// On click of expander button:
-	// Insert placeholder divs for children
-	// Get children either form local js cache or ajax GET
-	$('.item').on('click','i.item-expander', function(){
-		var toAppend = $(this).siblings('.collapse');
-		loader.addClass('enabled'); // Show loader if the request takes too long
+	// Expand and get children via AJAX
+
+	$(document).on('change','input[type=checkbox]', function(){
+		if (!this.checked) {
+			//do nothing if go from uncheck to checked
+			return;
+		}
+		var toAppend = $(this).siblings('ul.children');
 		
 		if(toAppend.is(':empty')){ // Only fill in if the branch has not been filled
-			var item_id = $(this).parent('div.item').data('itemid');
+			loader.addClass('enabled'); // Show loader if the request takes too long
+			var item_id = $(this).data('itemid');
 			var data;
 
 			if (localCacheDetail[item_id]){
@@ -117,81 +122,46 @@ $('document').ready(function() {
 
 	        // Display HTML of children
 	        if(data!=undefined){
+	        	var thisItemId = $(this).data('itemid');
 	        	data.forEach(function(item){
-	        		children_html+="<div class=\"item\" data-itemid=\""+ item.id +"\">";
-	        		children_of_children_glyphicon = (item.has_children)?"<i class=\"item-expander glyphicon glyphicon-plus\"></i>\n":"<i class=\"item-expander glyphicon glyphicon-plus\" style=\"visibility: hidden\"></i>\n";
-	        		children_html+=children_of_children_glyphicon;
-	        		children_html+= "<span class=\"item-name\" contenteditable=\"true\" data-name=\"item-name\">" + item.name + "</span>\n";
-	        		children_of_children_placeholder = (item.has_children)?"<div class=\"collapse\">":"";
-	        		children_html+=children_of_children_placeholder;
-	        		children_html+="</div></div>";
+	        		children_html += "<li class=\"item\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\">";
+	        		children_html += (item.has_children)? "<input type=\"checkbox\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"c" + item.id + "\"><label class=\"expander\" for=\"c" + item.id + "\"></label>\
+											<div class=\"tree_label item-name\" for=\"c" + item.id +"\" data-itemid=\"" + item.id + "\" data-name=\"name\" data-parentid=\"" + thisItemId +  "\" contenteditable=\"true\">" + item.name + "</div>\
+											<ul class=\"children\"></ul>":"<div class=\"tree_label item-name\" data-itemid=\"" + item.id + "\" contenteditable=\"true\" data-name=\"name\">" + item.name + "</div>"
+	        		children_html+="</li>";
 		        });
 	        }
 			toAppend.append(children_html);
-
-			// Increment margin for children of an item
-			var parentMargin = parseInt(toAppend.css('margin-left'),10);
-			var newMargin = parentMargin+20+'px';
-			toAppend.children('.item').css('margin-left',newMargin); 
 		}
-		toAppend.collapse('toggle');
 	});
-
-	// Show and hide plus/minus sign after collapsed/expanded
-	$('.item').on('show.bs.collapse','.collapse', function (e) {       
-		$(this).siblings('i').toggleClass('glyphicon-plus glyphicon-minus');
-    });
-    $('.item').on('hide.bs.collapse', '.collapse', function (e) {
-		$(this).siblings('i').toggleClass('glyphicon-plus glyphicon-minus');
-    });
-
-    // Create item function
-    // @input: name, parent_id
-    var createItem = function(element, name, parent_id){
-    	var newItemId = null;
-    	$.ajax({
-    		data: {
-    			item_name: name,
-    			parent_id: parent_id, 
-    		},
-    		url: "/create_item",
-    		method: "POST",
-    		success: function(json){
-    			if (json){
-    				newItemId = json.id;
-    				$(element).parent('div.item').attr('data-itemid',newItemId);
-    			}
-    		}
-    	});
-    };
-
+	
 	// Live ajax save with HTML5 contenteditable
 	// $('span[contenteditable=true]').focus() would not work
 	// since it does not recognize newly inserted elements
 	
 	var focusContentEditable = function(element){
-		console.log("Fired in: ", element);
+		// console.log("Fired in: ", element);
 		var originalDetail = element.text();
 		
 		element.focusout(function(event){
 			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
 			// restore state
 			var contentText = element.text();
+			
 			if( originalDetail == '' && contentText != originalDetail && $.trim(contentText) != ""){ // trim trailing spaces before comparison
 				var newItemName = contentText;
 				originalDetail = newItemName;
-				var newItemParent = element.parents('div.item')[1]; // 2 levels of parents
-				if (newItemParent == undefined){ // If level 0 items, no parent
-					var newItemParentId = null;
-				} else { // Items of Level > 0, get parentId to construct a new item object
-					var newItemParentId = $(newItemParent).data('itemid');
-				}
+
+				var newItemParentId = $(element).parent().prev().data('parentid');
+				if (newItemParentId == undefined){ newItemParentId = null;}
 				createItem(element, newItemName, newItemParentId);
 			} 
 			else if (contentText == originalDetail){
 				return;
 			}
-			else if ($.trim(contentText) == ""){
+			else if (contentText == '' || contentText == null){
+				$(element).parent().remove();
+				deleteItem(element);
 				return;
 			}
 			else {
@@ -205,11 +175,11 @@ $('document').ready(function() {
 			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
 			var el = event.target;
 			var input = el.nodeName != 'INPUT' && el.nodeName != 'TEXTAREA';
-			// var element = $(el);
+
 			if (input) {	
 				switch(event.which) {
 			        case 38: // up
-			        	var prevItem = element.parent('div.item').prev().children('span.item-name');
+			        	var prevItem = element.parent().prev().children('div.tree_label');
 						if (prevItem.length){ // prevent el.blur if at end of list
 							event.preventDefault();
 							// el.blur();
@@ -218,7 +188,7 @@ $('document').ready(function() {
 			        	break;
 
 			        case 40: // down
-			        	var nextItem = element.parent('div.item').next().children('span.item-name');
+			        	var nextItem = element.parent().next().children('div.tree_label');
 						if (nextItem.length){ // prevent el.blur if at end of list
 							event.preventDefault();
 							// el.blur();
@@ -237,38 +207,26 @@ $('document').ready(function() {
 
 			        case 13: // new line
 			        	// Return/Enter key: 
-				        // 1. Save data via ajax
-				        // 2. Create new div.item > span.item-name to create new object
-
-				        // Start here:
+				        
 				        // 1. Save data if original != el.innerHTML
 				        event.preventDefault();
 				        var contentText = element.text();
+				        console.log(contentText, originalDetail);
 				        if(contentText != originalDetail && $.trim(contentText) != ""){ // trim trailing spaces before comparison
 								updateItem(element);
 						} 
 						// Only create new item if new line was empty
-						else if (originalDetail=='') {
-							var newItemName = contentText;
-							var newItemParent = element.parents('div.item')[1]; // 2 levels of parents
-							if (newItemParent == undefined){ // If level 0 items, no parent
-								var newItemParentId = null;
-							} else { // Items of Level > 0, get parentId to construct a new item object
-								var newItemParentId = $(newItemParent).data('itemid');
-							}
-							createItem(element, newItemName, newItemParentId);
-							originalDetail = newItemName;
-						}
+						// else if (originalDetail=='') {
+						// 	var newItemName = contentText;
+						// 	var newItemParentId = $(element).parent('.item').data('itemid');
+						// 	createItem(element, newItemName, newItemParentId);
+						// 	originalDetail = newItemName;
+						// }
 						
-						// el.blur();
-
 						// 2. Create new item below it
-						var newItemHtml = "<div class=\"item\" data-itemid=\"\">\
-									<i class=\"item-expander glyphicon glyphicon-plus\" style=\"visibility:hidden;\"></i>\
-										<span class=\"item-name\" contenteditable=\"true\" data-name=\"item-name\"></span>\
-									</div>";
-						$(newItemHtml).insertAfter((element.parent('div.item')));
-						var newlyCreatedItem = $(element.parent('div.item')).next().children('span.item-name');
+						var newItemHtml = "<li class=\"item\" data-itemid=\"\" ><div class=\"tree_label item-name\" data-itemid=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
+						$(newItemHtml).insertAfter(element.parent());
+						var newlyCreatedItem = element.parent().next().children('div.tree_label');
 						newlyCreatedItem.focus();
 						focusContentEditable(newlyCreatedItem);
 			        	break;
@@ -279,15 +237,37 @@ $('document').ready(function() {
 		});
 	};
 
-	$('.item').on('focus','span',function(e){
+	$('.item').on('focus','.item-name',function(e){
 		var element = $(this);
 		focusContentEditable(element);
 	});
 	
+	// Create item function
+    // @input: name, parent_id
+    var createItem = function(element, name, parent_id){
+    	var newItemId = null;
+    	$.ajax({
+    		data: {
+    			item_name: name,
+    			parent_id: parent_id, 
+    		},
+    		url: "/create_item",
+    		method: "POST",
+    		success: function(json){
+    			if (json){
+    				newItemId = json.id;
+    				$(element).parent().attr('data-itemid',newItemId);
+    				$(element).attr('data-itemid',newItemId);
+    				$(element).parent().attr('data-parentid', parent_id);
+    			}
+    		}
+    	});
+    };
+
 	// Update detail of item
 	var updateItem = function(element){
 		var data = {};
-		var itemId = $(element).parent('div.item').data('itemid');
+		var itemId = $(element).data('itemid');
 		
 		// If there is an itemId, this is an item already created
 		// so update its information
@@ -307,4 +287,64 @@ $('document').ready(function() {
 		localCacheTree[itemId] = null;
 		localCacheDetail[itemId] = null;
 	};
+
+	// Update detail of item
+	var deleteItem = function(element){
+		var data = {};
+		var itemId = $(element).data('itemid');
+		
+		// If there is an itemId, this is an item already created
+		// so update its information
+		if (itemId){
+			data['item_id'] = itemId;
+			// Send an ajax request to update the field
+			$.ajax({
+				url: '/delete_item',
+				data: data,
+				method: 'POST'
+			});
+		}
+
+		// Purge cache after update
+		localCacheTree[itemId] = null;
+		localCacheDetail[itemId] = null;
+	};
+});
+
+function isNumber(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+function setFontSize(el) {
+    var fontSize = el.val();
+    
+    if ( isNumber(fontSize) && fontSize >= 0.5 ) {
+      $('.tree').css({ fontSize: fontSize + 'em' });
+    } else if ( fontSize ) {
+      el.val('1');
+      $('.tree').css({ fontSize: '1em' });  
+    }
+}
+
+$(function() {
+  
+  $('#fontSize')
+    .bind('change', function(){ setFontSize($(this)); })
+    .bind('keyup', function(e){
+      if (e.keyCode == 27) {
+        $(this).val('1');
+        $('body').css({ fontSize: '1em' });  
+      } else {
+        setFontSize($(this));
+      }
+    });
+  
+  $(window)
+    .bind('keyup', function(e){
+      if (e.keyCode == 27) {
+        $('#fontSize').val('1');
+        $('body').css({ fontSize: '1em' });  
+      }
+    });
+  
 });

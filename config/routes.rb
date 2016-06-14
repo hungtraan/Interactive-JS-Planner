@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   match 'get_detail' => 'onepage#getDetail', via: :get
   match 'update_individual_detail' => 'onepage#updateIndividualDetail', via: :post
   match 'create_item' => 'onepage#createItem', via: :post
+  match 'delete_item' => 'onepage#deleteItem', via: :post
   # You can have the root of your site routed with "root"
   # root 'welcome#index'
 

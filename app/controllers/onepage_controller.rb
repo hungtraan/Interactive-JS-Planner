@@ -64,8 +64,6 @@ class OnepageController < ApplicationController
 			newItem = Item.new(:name => itemName)
 			newItem.save
 		end
-		puts "Created item", newItem
-
 		respond_to do |format|
 			format.json {
 				render :json => newItem
@@ -73,5 +71,18 @@ class OnepageController < ApplicationController
         end
 		# head 200, content_type: "text/html"
 	end
+
+	def deleteItem
+		itemId = params[:item_id]
+		if itemId != nil || itemId != ''
+			if Item.exists?(itemId)
+				puts itemId
+				Item.destroy(itemId)
+			end
+		end
+		head 200, content_type: "text/html"
+	end
+
+	
 
 end

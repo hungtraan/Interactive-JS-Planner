@@ -9,6 +9,7 @@ class Item < ActiveRecord::Base
 	  parent.try(:name)
 	end
 
+	# Returns array of parents of an item in elderly order
 	def getBreadcrumbParents
 		parents_arr = []
 		runner = self
@@ -19,6 +20,7 @@ class Item < ActiveRecord::Base
 		return parents_arr
 	end
 
+	# Returns all child items
 	def getChildren
 		childrenArr = self.children
 		children = []
@@ -34,16 +36,19 @@ class Item < ActiveRecord::Base
 		return children
 	end
 
-	def setParent(pid)
-		self.parent_id=pid
-		self.parent_name = Item.find(pid).name
-		self.save
-	end
-
+	# Add children to a parent item
+	# @input array of children's id
 	def addChildren(array)
 		array.each do |children_id|
 			Item.find(children_id).setParent(self.id)
 		end
+	end
+	
+	# Update parent item of the target item
+	def setParent(pid)
+		self.parent_id=pid
+		self.parent_name = Item.find(pid).name
+		self.save
 	end
 
 	def hasParent?
