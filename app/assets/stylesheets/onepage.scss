@@ -3,6 +3,7 @@
 // You can use Sass (SCSS) here: http://sass-lang.com/
 
 @import "compass/css3";
+@import "font-awesome";
 
 // Cube Loader variables
 $size          : 35px;
@@ -146,57 +147,57 @@ $primary-color : #00b7f1;
 		*/
 
 		.tree {
-		  margin: 1em;
-		  input {
-		    position: absolute;
-		    clip: rect(0, 0, 0, 0);
-		    ~ ul {
-		    	display: none;
-				padding-left: 0px;
-				margin-top: -5px;
-				margin-left: -1px;
+			margin: 1em;
+			input {
+		    	position: absolute;
+			    clip: rect(0, 0, 0, 0);
+			    ~ ul {
+			    	display: none;
+					padding-left: 0px;
+					margin-top: -5px;
+					margin-left: -1px;
 
-		    }
-		    &:checked ~ ul {
-		      display: block;
-		    }
-		  }
-		  li {
-		    line-height: 1.2;
-		    position: relative;
-		    padding: 0 0 1em 1em;
-		    list-style: none;
-		    label.expander {
-			  	width: 1em;
-			  	height: 1em;
-			    background: #000;
-			    color: #fff;
-			    position: relative;
-			    z-index: 100;
-			    float: left;
-			    margin: 0 1em 0 -2em;
-			    width: 1em;
-			    height: 1em;
-			    border-radius: 1em;
-			    
-			    text-align: center;
-			    line-height: .9em;
-			    &:before{
-			    	cursor: pointer;
-			    	content: '+';
 			    }
-			    &:before:checked {
-			    	cursor: pointer;
-					content: '–';
+		    	&:checked ~ ul {
+		    		display: block;
+		    	}
+		  	}
+		  	li {
+			    line-height: 1.2;
+			    position: relative;
+			    padding: 0 0 1em 1em;
+			    list-style: none;
+			    label.expander {
+				  	width: 1em;
+				  	height: 1em;
+				    background: #000;
+				    color: #fff;
+				    position: relative;
+				    z-index: 100;
+				    float: left;
+				    margin: 0 1em 0 -2em;
+				    width: 1em;
+				    height: 1em;
+				    border-radius: 1em;
+				    
+				    text-align: center;
+				    line-height: .9em;
+				    &:before{
+				    	cursor: pointer;
+				    	content: '+';
+				    }
+				    &:before:checked {
+				    	cursor: pointer;
+						content: '–';
+					}
 				}
-			  }
-		  }
-		  ul li {
-		    padding: 1em 0 0 1em;
-		  }
-		  > li:last-child {
-		    padding-bottom: 0;
-		  }
+			}
+			ul li {
+		    	padding: 1em 0 0 1em;
+			}
+			> li:last-child {
+		    	padding-bottom: 0;
+			}
 		}
 
 		/* ————————————————————–

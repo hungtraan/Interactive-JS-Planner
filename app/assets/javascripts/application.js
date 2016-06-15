@@ -27,8 +27,16 @@ localCacheDetail = {};
 $(document).ready(function() {
 	var loader = $('.loader');
 
+	// Change cursor on mouse hold to specify moveability
+	$('.tree_label').mousedown(function(){
+	   $(this).css('cursor', 'move');
+	});
+	$('.tree_label').mouseup(function(){ 
+	   $(this).css('cursor', 'auto');
+	});
 
-	$('.tree').on('click','.item-name', function(){
+	// Highlight and Load detail when clicking on an item in tree
+	$('.tree').on('click','.tree_label.item-name', function(){
 		$('.item-name').removeClass('selected');
 		var editor = $('.object-editor');
 		if(!editor.hasClass('is-open')){

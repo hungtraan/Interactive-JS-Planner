@@ -26,6 +26,7 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 
 # New stuff
 gem 'compass-rails'
+gem 'font-awesome-rails'
 # End new stuff
 
 # Use ActiveModel has_secure_password
