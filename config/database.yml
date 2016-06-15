@@ -52,3 +52,4 @@ production:
   database: objectviewer_production
   username: cfmarketmaster
   password: <%= ENV['OBJECTVIEWER_DATABASE_PASSWORD'] %>
+  host: flashstarts-mysql.cti5t22zvmoc.us-east-1.rds.amazonaws.com
