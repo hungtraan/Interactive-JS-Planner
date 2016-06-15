@@ -43,6 +43,13 @@ class Item < ActiveRecord::Base
 			Item.find(children_id).setParent(self.id)
 		end
 	end
+	
+	# Update parent item of the target item
+	def setParent(pid)
+		self.parent_id=pid
+		self.parent_name = Item.find(pid).name
+		self.save
+	end
 
 	# Update parent item of the target item
 	def setParent(pid)
