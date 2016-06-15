@@ -54,8 +54,8 @@ class Item < ActiveRecord::Base
 	# Update parent item of the target item
 	def setParent(pid)
 		self.parent_id=pid
-		if pid == nil
-			puts "NULL"
+		puts pid
+		if pid == nil || pid == ''
 			self.parent_name = nil
 		elsif Item.exists?(pid)
 			self.parent_name = Item.find(pid).name

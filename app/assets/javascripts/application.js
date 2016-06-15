@@ -16,7 +16,11 @@
 //= require bootstrap-sprockets
 //= require_tree .
 
-// http://stackoverflow.com/questions/21337393/bootstrap-load-collapse-panel-with-ajax
+// Prototyping solution: Implementing cache in javascript at runtime
+// Pros: fast to implement
+// Cons: Cache at runtime (into memory), loses cache on refresh
+// Future direction: Either local storage, InnoDB, app cache,  (even service worker?)
+
 localCacheTree = {};
 localCacheDetail = {};
 
@@ -270,6 +274,7 @@ $(document).ready(function() {
 		focusContentEditable(element);
 	});
 	
+	// BEGIN HELPER FUNCTIONS ==============================================
 	// Create item function
     // @input: name, parent_id
     var createItem = function(element, name, parent_id){
@@ -293,6 +298,8 @@ $(document).ready(function() {
     };
 
     // Load detail of item
+    // @input jquery element, boolean of using localCache, default true
+    // ajax get details of the item and insert into object viewer
     var loadDetail = function(element, useCache=true) {
     	var item_id = element.data('itemid');
 		if (localCacheTree[item_id] && useCache){
@@ -344,6 +351,8 @@ $(document).ready(function() {
     }
 
 	// Update detail of item
+	// @input jquery element whose text has been updated
+	// post ajax update from this (innerhtml) text to server
 	var updateItem = function(element){
 		var data = {};
 		var itemId = $(element).data('itemid');
@@ -373,7 +382,9 @@ $(document).ready(function() {
 		localCacheDetail[itemId] = null;
 	};
 
-	// Update detail of item
+	// Delete item
+	// @input jquery element of an item
+	// post ajax request to server, server will handle deletion validation
 	var deleteItem = function(element){
 		var data = {};
 		var itemId = $(element).data('itemid');
@@ -395,6 +406,8 @@ $(document).ready(function() {
 		localCacheDetail[itemId] = null;
 	};
 
+	// Set child-parent relationship
+	// @input item id of child and parent (one-one)
 	var setChildrenParent = function(child_id, parent_id){
 		$.ajax({
 			url: '/update_parent_children',
@@ -406,8 +419,12 @@ $(document).ready(function() {
 			},
 		});
 	};
+
+	// END HELPER FUNCTIONS ==============================================
 });
 
+
+// Helper functions for Zooming tool
 function isNumber(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
