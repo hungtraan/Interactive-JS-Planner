@@ -195,14 +195,6 @@ $(document).ready(function() {
 					element.parent().appendTo(prevItem.children('ul.children'));
 					// expand the tree
 					element.parent().parent().siblings('input[type=checkbox]').prop('checked','true');
-					$.ajax({
-						url: '/update_parent_children',
-						method: "POST",
-						data: {
-							parent_id: parentId,
-							item_id: itemId,
-						},
-					});
 					setChildrenParent(itemId, parentId);
 					loadDetail(element,false); // false == purge cache, get new info
 					return;
@@ -302,7 +294,6 @@ $(document).ready(function() {
 
     // Load detail of item
     var loadDetail = function(element, useCache=true) {
-    	console.log('fired');
     	var item_id = element.data('itemid');
 		if (localCacheTree[item_id] && useCache){
 			loader.removeClass('enabled'); // Hide loader
@@ -408,6 +399,7 @@ $(document).ready(function() {
 		$.ajax({
 			url: '/update_parent_children',
 			method: "POST",
+			async: true,
 			data: {
 				parent_id: parent_id,
 				item_id: child_id,
