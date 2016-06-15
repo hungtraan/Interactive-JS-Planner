@@ -50,5 +50,5 @@ test:
 production:
   <<: *default
   database: objectviewer_production
-  username: objectviewer
+  username: cfmarketmaster
   password: <%= ENV['OBJECTVIEWER_DATABASE_PASSWORD'] %>
