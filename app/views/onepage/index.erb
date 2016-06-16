@@ -69,7 +69,8 @@
 					</div>
 
 					<ul class="tree">
-						<% @itemsWithNoParent.each do |item|
+						<% if @itemsWithNoParent.length != 0 
+						@itemsWithNoParent.each do |item|
 						has_children = item.hasChildren? %>
 							<li class="item" data-itemid="<%= item.id %>" >
 							<% if(has_children) %>
@@ -81,6 +82,11 @@
 							<% else %>
 								<div class="tree_label item-name" data-itemid="<%= item.id %>" contenteditable="true" data-name="name"><%= item.name %></div>
 							<% end %>
+							</li>
+						<% end %>
+						<% else %>
+							<li class="item">
+								<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>
 							</li>
 						<% end %>
 					</ul>

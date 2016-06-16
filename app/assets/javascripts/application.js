@@ -26,6 +26,12 @@ localCacheDetail = {};
 $(document).ready(function() {
 	var loader = $('.loader');
 
+	//
+	$('.first-item-placeholder').focus( function(){
+		console.log('a');
+		$(this).text('');
+	});
+
 	// Change cursor on mouse hold to specify moveability
 	$('.tree_label').mousedown(function(){
 	   $(this).css('cursor', 'move');
@@ -36,7 +42,6 @@ $(document).ready(function() {
 
 	// Highlight and Load detail when clicking on an item in tree
 	$('.tree').on('click','.tree_label.item-name', function(){
-		$('.item-name').removeClass('selected');
 		var editor = $('.object-editor');
 		if(!editor.hasClass('is-open')){
 			$('.object-tree, .new-tree').toggleClass('col-md-12 col-md-8');
@@ -84,7 +89,7 @@ $(document).ready(function() {
 					var newItemParentId = element.parent().prev().data('parentid');
 					
 					if (newItemParentId == undefined){
-						if (element.parent().prev().length){
+						if (element.parent().prev().length && element.parent('li').parent('ul').length == 0){
 							newItemParentId = element.parent().prev().data('itemid');
 						} else {
 							newItemParentId = null;
@@ -98,6 +103,12 @@ $(document).ready(function() {
 					// i.e. not a new line
 					$(element).parent().remove();
 					deleteItem(element);
+					return;
+				}
+				else if (element.data('itemid') != '' && contentText != '' &&  element.data('itemid') == ''){
+					var newItemName = contentText; 
+					createItem(element, newItemName, null);
+					event.stopImmediatePropagation();
 					return;
 				}
 				else if (element.data('itemid') == undefined || element.data('itemid') == ''){

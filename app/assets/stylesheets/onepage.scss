@@ -48,7 +48,7 @@ $primary-color : #00b7f1;
     position: absolute;
     padding: 15px;
 
-	div[contenteditable]:hover:after {
+	div[contenteditable]:not(.first-item-placeholder):hover:after {
 		content: ' Click to view detail/edit';
 		font-style: italic;
 		// font-size: 12px;
@@ -215,6 +215,26 @@ $primary-color : #00b7f1;
 		  &:last-child:before{
 		  	border-bottom: 1px solid #777;
 		  }
+		  	&.first-item-placeholder[contenteditable=true]:empty:before {
+				content: attr(placeholder);
+				display: block; /* For Firefox */
+				font-weight: 300;
+				color: #ccc;
+				cursor: text;
+			}
+
+			&:not(.first-item-placeholder):before {
+				position: absolute;
+				top: 0;
+				left: -1.5em;
+				display: block;
+				height: 0.5em;
+				width: 1em;
+				border-bottom: 1px solid #777;
+				border-left: 1px solid #777;
+				border-radius: 0 0 0 .3em;
+				content: '';
+			}
 		}
 
 		/* ————————————————————–
@@ -253,18 +273,7 @@ $primary-color : #00b7f1;
 		}
 
 		.tree_label{
-			&:before {
-				position: absolute;
-				top: 0;
-				left: -1.5em;
-				display: block;
-				height: 0.5em;
-				width: 1em;
-				border-bottom: 1px solid #777;
-				border-left: 1px solid #777;
-				border-radius: 0 0 0 .3em;
-				content: '';
-			}
+			
 		}
 
 		div.tree_label{
