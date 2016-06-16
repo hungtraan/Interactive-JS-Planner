@@ -46,7 +46,6 @@ $(document).ready(function() {
 		}
 		if(!$(this).hasClass('selected')){
 			var item_id = $(this).data('itemid');
-			var data;
 			if (item_id == '') {return;}
 			loadDetail($(this));
 		}
@@ -267,10 +266,12 @@ $(document).ready(function() {
     // @input jquery element, boolean of using localCache, default true
     // ajax get details of the item and insert into object viewer
     var loadDetail = function(element, useCache=true) {
+    	var data;
     	var item_id = element.data('itemid');
-		if (localCacheTree[item_id] && useCache){
+    	if (localCacheTree[item_id] && useCache){
 			loader.removeClass('enabled'); // Hide loader
 			data = localCacheTree[item_id];
+			showDetailOnSide(data, item_id);
 		}
 		else{
 			loader.addClass('enabled'); // Show loader animation if the request takes too long
@@ -285,34 +286,38 @@ $(document).ready(function() {
 	            	data=json;
 	            	localCacheTree[item_id] = data;
 	            	if(data!=undefined){
-			        	var object = data[0];
-			        	var parents = data[1];
-			        	$('.object-editor span.item-id').html(object.id);
-						$('.object-editor span.item-name').html(object.name);
-						$('.object-editor span.item-parent').html(object.parent_name);
-						$('.object-editor span.item-desc').html(object.description);
-						$('.object-editor span.item-by').html(object.by_name);
-
-						$('.object-editor span.item-id').attr('data-itemid', item_id);
-						$('.object-editor span.item-name').attr('data-itemid', item_id);
-						$('.object-editor span.item-parent').attr('data-itemid', item_id);
-						$('.object-editor span.item-desc').attr('data-itemid', item_id);
-						$('.object-editor span.item-by').attr('data-itemid', item_id);
-
-						var breadcrumb_li = "";
-						var parents_li = "<li><a class=\"parents\" href=\"#\">"
-						parents.forEach(function(item){
-							breadcrumb_li += parents_li + item.name + "</a></li>";
-						});
-						var thisItem_li = "<li class=\"selected\">" + object.name + "</li>";
-						$('.breadcrumb-onepage').html("");
-						$('.breadcrumb-onepage').append(breadcrumb_li);
-						$('.breadcrumb-onepage').append(thisItem_li);
+			        	showDetailOnSide(data, item_id);
 			        }
-			        loader.removeClass('enabled'); // Hide loader
 	            }
 	        });
 		}
+    }
+
+    var showDetailOnSide = function(data, item_id){
+    	var object = data[0];
+    	var parents = data[1];
+    	$('.object-editor span.item-id').html(object.id);
+		$('.object-editor span.item-name').html(object.name);
+		$('.object-editor span.item-parent').html(object.parent_name);
+		$('.object-editor span.item-desc').html(object.description);
+		$('.object-editor span.item-by').html(object.by_name);
+
+		$('.object-editor span.item-id').attr('data-itemid', item_id);
+		$('.object-editor span.item-name').attr('data-itemid', item_id);
+		$('.object-editor span.item-parent').attr('data-itemid', item_id);
+		$('.object-editor span.item-desc').attr('data-itemid', item_id);
+		$('.object-editor span.item-by').attr('data-itemid', item_id);
+
+		var breadcrumb_li = "";
+		var parents_li = "<li><a class=\"parents\" href=\"#\">"
+		parents.forEach(function(item){
+			breadcrumb_li += parents_li + item.name + "</a></li>";
+		});
+		var thisItem_li = "<li class=\"selected\">" + object.name + "</li>";
+		$('.breadcrumb-onepage').html("");
+		$('.breadcrumb-onepage').append(breadcrumb_li);
+		$('.breadcrumb-onepage').append(thisItem_li);
+		loader.removeClass('enabled'); // Hide loader
     }
 
 	// Update detail of item
