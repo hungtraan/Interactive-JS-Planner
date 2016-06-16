@@ -80,13 +80,27 @@ $(document).ready(function() {
 					var newItemName = contentText;
 					originalDetail = newItemName;
 
-					var newItemParentId = $(element).parent().prev().data('parentid');
-					if (newItemParentId == undefined){ newItemParentId = null;}
+					var newItemParentId = element.parent().prev().data('parentid');
+					
+					if (newItemParentId == undefined){
+						console.log(originalDetail);
+						if (element.parent().prev().length){
+							newItemParentId = element.parent().prev().data('itemid');
+						} else {
+							newItemParentId = null;
+						}
+					}
 					createItem(element, newItemName, newItemParentId);
+					event.stopImmediatePropagation();
 				} 
-				else if (contentText == '' || contentText == null){
+				else if ((element.data('itemid') != undefined && element.data('itemid') != '') && (contentText == '' || contentText == null)){ 
+					// Remove if content is blank, but only for those with itemid
+					// i.e. not a new line
 					$(element).parent().remove();
 					deleteItem(element);
+					return;
+				}
+				else if (element.data('itemid') == undefined || element.data('itemid') == ''){
 					return;
 				}
 			}
@@ -156,7 +170,6 @@ $(document).ready(function() {
 
 					// Expand the tree if prev item has children
 					if (prevItem.children('input[type=checkbox]').length){
-						console.log('yo');
 						expandBranch(prevItem.children('input[type=checkbox]'));
 					}
 					
@@ -168,15 +181,17 @@ $(document).ready(function() {
 						var toAppend = '<ul class="children"></ul>';
 						$(toAppend).appendTo(prevItem);
 					}
-
+					
 					// Move itself
 					element.parent().appendTo(prevItem.children('ul.children'));
 					// Expand the tree
 					element.parent().parent().siblings('input[type=checkbox]').prop('checked','true');
 					
 					// Update relationship
-					setChildrenParent(itemId, parentId);
-					loadDetail(element,false); // false = purge cache, get new info
+					if (element.data('itemid') != undefined && element.data('itemid') != ''){
+						setChildrenParent(itemId, parentId);
+						loadDetail(element,false); // false = purge cache, get new info
+					}
 					element.focus(); // Keep focus on the item after tab
 				}
 				else{
@@ -275,6 +290,7 @@ $(document).ready(function() {
     var loadDetail = function(element, useCache=true) {
     	var data;
     	var item_id = element.data('itemid');
+    	if (item_id == undefined) {return;}
     	if (localCacheTree[item_id] && useCache){
 			loader.removeClass('enabled'); // Hide loader
 			data = localCacheTree[item_id];
