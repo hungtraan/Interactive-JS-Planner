@@ -55,6 +55,7 @@ $(document).ready(function() {
 	// Expand and get children via AJAX
 	$(document).on('change','input[type=checkbox]', function(){
 		if (!this.checked) { //do nothing if go from uncheck to checked
+			$(this).siblings('div.tree_label').removeClass('expanded');
 			return;
 		}
 		expandBranch(this);
@@ -118,7 +119,6 @@ $(document).ready(function() {
 
 		element.keydown(function(event){
 			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
-			console.log('waiting');
 			var el = event.target,
 				input = el.nodeName != 'INPUT' && el.nodeName != 'TEXTAREA';
 
@@ -196,26 +196,56 @@ $(document).ready(function() {
 				}
 				else{
 					switch(event.which) {
+				        case 39: // Right: Expand
+				        	if (element.siblings('label.expander').length){
+				        		event.preventDefault();
+				        		element.addClass('expanded');
+				        		expandBranch(element.siblings('input[type=checkbox]'));
+				        		element.siblings('input[type=checkbox]').prop('checked',true);
+				        	}
+				        	break;
+				        
+				        case 37: // Left: Collapse
+				        	if (element.hasClass('expanded')){
+				        		event.preventDefault();
+				        		element.removeClass('expanded');
+				        		element.siblings('input[type=checkbox]').prop('checked',false);
+				        	}
+				        	break;
+
 				        case 38: // Up
+				        	event.preventDefault();
 				        	var prevItem = element.parent().prev().children('div.tree_label');
+				        	
+				        	// Move into expanded subtree of previous item
+				        	if (prevItem.hasClass('expanded')){
+				        		prevItem = prevItem.parent().find('ul.children > li.item:last-child > div.tree_label');
+				        		prevItem = prevItem;
+				        	}
 							if (prevItem.length){ // prevent el.blur if at end of list
-								event.preventDefault();
-								prevItem.focus();
+								prevItem[prevItem.length-1].focus();
+							} else {
+								if (element.parent('li').parent('ul').prev('div.tree_label').length){
+									prevItem = element.parent('li').parent('ul').prev('div.tree_label');
+									prevItem.focus();
+								}
 							}
 				        	break;
 
 				        case 40: // Down
+				        	var nextItem;
 				        	if (element.hasClass('expanded')){ // support traversing parent -> children
-				        		var nextItem = element.parent().find('ul.children > li.item:first-child > div.tree_label');
+				        		nextItem = element.parent().find('ul > li.item:first-child > div.tree_label');
 				        	} else { // same-level traversing
-				        		var nextItem = element.parent().next().children('div.tree_label');
+				        		nextItem = element.parent().next().children('div.tree_label');
 				        	}
 							if (nextItem.length){ // prevent el.blur if at end of list
 								event.preventDefault();
-								nextItem.focus();
+								nextItem[0].focus();
 							} 
-							else if (element.parent){ // if its parent has more sibling to go to
-
+							else if (element.parent('li').parent('ul').parent('li').siblings('li')){ // if its parent has more sibling to go to
+								nextItem = element.parent('li').parent('ul').parent('li').next().children('div.tree_label');
+								nextItem.focus();
 							}
 				        	break;
 
