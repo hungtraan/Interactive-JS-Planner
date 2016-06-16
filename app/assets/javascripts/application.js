@@ -66,12 +66,10 @@ $(document).ready(function() {
 	// $('span[contenteditable=true]').focus() would not work
 	// since it does not recognize newly inserted elements
 	var focusContentEditable = function(element){
-		// console.log("Fired in: ", element);
+		event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
 		var originalDetail = element.text();
 		
 		element.focusout(function(event){
-			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
-			// restore state
 			var contentText = element.text();
 			
 			// When focus out (move on to a new line, clicking out of editable area)
@@ -107,12 +105,15 @@ $(document).ready(function() {
 
 		element.keydown(function(event){
 			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
+			console.log('waiting');
 			var el = event.target,
 				input = el.nodeName != 'INPUT' && el.nodeName != 'TEXTAREA';
 
-			if (input) {	
+			if (input) 
+			{	
 				// Shift + Tab: Move item back out 1 level
-				if (element.hasClass('tree_label') && event.which == 9 && event.shiftKey){  // shift + tab
+				if (element.hasClass('tree_label') && event.which == 9 && event.shiftKey)
+				{ 
 					event.preventDefault();
 					
 					// Exception: No parent possible
@@ -124,8 +125,7 @@ $(document).ready(function() {
 					var parentItem = thisItem_li.parent('ul').parent('li'),
 						parentId = parentItem.parent('ul').parent('li').data('itemid');
 					
-					// 1. Remove expander
-					// Special case: Delete tree structure if the element is the only child
+					// 1. Remove expander & parent's subtree if if the element is the only child
 					if (element.parent().siblings().length == 0){
 						var toRemove = thisItem_li.parent('ul').siblings('input, label');
 						toRemove.remove();
@@ -137,19 +137,20 @@ $(document).ready(function() {
 					
 					// 3. Update the item information
 					if (parentId == undefined) { parentId = null;}
-					// 4. setChildrenParent(itemId, parentId);
+					// setChildrenParent(itemId, parentId);
 					loadDetail(element,false); // false == purge cache, get new info
-					element.focus(); // Keep focus on the item after Shift + tab 
+					element.focus(); // Keep focus on the item after Shift + tab
+					focusContentEditable(element); // This line solved a bug: Cannot tab it after shift-tab on root level by putting focus again on this element
 				}
+
 				// Tab: Move item in 1 level (to its previous sibling)
-				else if (element.hasClass('tree_label') && event.which == 9 && !event.shiftKey) { // tab without shift
+				else if (element.hasClass('tree_label') && event.which == 9 && !event.shiftKey) 
+				{
 		        	event.preventDefault();
 
 					// Exception: Top of list, no previous sibling
 					var prevItem = element.parent('li').prev('li');
-					if (prevItem.length == 0){ 
-						console.log('oops'); return; } 
-					// Problem remaining: Cannot tab it after shift-tab on root level
+					if (prevItem.length == 0){ return; } 
 
 					var itemId = element.data("itemid");
 					var parentId = prevItem.data("itemid");
@@ -167,16 +168,16 @@ $(document).ready(function() {
 						
 						var toAppend = '<ul class="children"></ul>';
 						$(toAppend).appendTo(prevItem);
-					} else {
-						console.log("oops 2");
 					}
 
 					// Move itself
 					element.parent().appendTo(prevItem.children('ul.children'));
 					// Expand the tree
 					element.parent().parent().siblings('input[type=checkbox]').prop('checked','true');
-					// setChildrenParent(itemId, parentId);
-					loadDetail(element,false); // false == purge cache, get new info
+					
+					// Update relationship
+					setChildrenParent(itemId, parentId);
+					loadDetail(element,false); // false = purge cache, get new info
 					element.focus(); // Keep focus on the item after tab
 				}
 				else{
@@ -199,7 +200,7 @@ $(document).ready(function() {
 
 				        case 27: // Esc
 				        	// restore state
-							document.execCommand('undo');
+							element.text(originalDetail);
 							el.blur();
 				        	break;
 
@@ -457,24 +458,5 @@ function setFontSize(el) {
 }
 
 $(function() {
-  
-  $('#fontSize')
-    .on('input', function(){ setFontSize($(this)); })
-    .bind('keyup', function(e){
-      if (e.keyCode == 27) {
-        $(this).val('1');
-        $('body').css({ fontSize: '1em' });  
-      } else {
-        setFontSize($(this));
-      }
-    });
-  
-  $(window)
-    .bind('keyup', function(e){
-      if (e.keyCode == 27) {
-        $('#fontSize').val('1');
-        $('body').css({ fontSize: '1em' });  
-      }
-    });
-  
+  $('#fontSize').on('input', function(){ setFontSize($(this)); }) 
 });
