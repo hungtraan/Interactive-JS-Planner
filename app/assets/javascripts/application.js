@@ -48,7 +48,6 @@ $(document).ready(function() {
 			var item_id = $(this).data('itemid');
 			var data;
 			if (item_id == '') {return;}
-			loader.addClass('enabled'); // Show loader animation if the request takes too long
 			loadDetail($(this));
 		}
 		$(this).addClass('selected');
@@ -76,6 +75,10 @@ $(document).ready(function() {
 			// restore state
 			var contentText = element.text();
 			
+			// When focus out (move on to a new line, clicking out of editable area)
+			// If old content to new content --> update item
+			// If blank content to new content --> create item
+			// If totally blank item --> delete item
 			if (element.hasClass('tree_label')){
 				if (originalDetail == '' && contentText != originalDetail && $.trim(contentText) != ""){ // trim trailing spaces before comparison
 					var newItemName = contentText;
@@ -105,13 +108,13 @@ $(document).ready(function() {
 
 		element.keydown(function(event){
 			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
-			var el = event.target;
-			var input = el.nodeName != 'INPUT' && el.nodeName != 'TEXTAREA';
+			var el = event.target,
+				input = el.nodeName != 'INPUT' && el.nodeName != 'TEXTAREA';
 
 			if (input) {	
+				// Shift + Tab: Move item back out 1 level
 				if (element.hasClass('tree_label') && event.which == 9 && event.shiftKey){  // shift + tab
 					event.preventDefault();
-					// Move item back out 1 level
 					
 					// Exception: No parent possible
 					var treeElement = element.parent().parent();
@@ -123,30 +126,31 @@ $(document).ready(function() {
 						parentId = parentItem.parent('ul').parent('li').data('itemid');
 					
 					// 1. Remove expander
-					// Special case 1: Delete tree structure if the element is the only child
+					// Special case: Delete tree structure if the element is the only child
 					if (element.parent().siblings().length == 0){
 						var toRemove = thisItem_li.parent('ul').siblings('input, label');
 						toRemove.remove();
 						thisItem_li.parent('ul').remove();
 					}
 
-					// 3. Move after its parent
+					// 2. Move after its parent
 					$(parentItem).after(thisItem_li);
 					
-					// Update the item information
+					// 3. Update the item information
 					if (parentId == undefined) { parentId = null;}
-					// setChildrenParent(itemId, parentId);
+					// 4. setChildrenParent(itemId, parentId);
 					loadDetail(element,false); // false == purge cache, get new info
-					element.focus(); // Keep focus on the item after Shift + tab
-					// return;
-					// Problem remaining: Cannot tab it after shift-tab 
+					element.focus(); // Keep focus on the item after Shift + tab 
 				}
+				// Tab: Move item in 1 level (to its previous sibling)
 				else if (element.hasClass('tree_label') && event.which == 9 && !event.shiftKey) { // tab without shift
 		        	event.preventDefault();
 
 					// Exception: Top of list, no previous sibling
 					var prevItem = element.parent('li').prev('li');
-					if (prevItem.length == 0){ return; }
+					if (prevItem.length == 0){ 
+						console.log('oops'); return; } 
+					// Problem remaining: Cannot tab it after shift-tab on root level
 
 					var itemId = element.data("itemid");
 					var parentId = prevItem.data("itemid");
@@ -164,6 +168,8 @@ $(document).ready(function() {
 						
 						var toAppend = '<ul class="children"></ul>';
 						$(toAppend).appendTo(prevItem);
+					} else {
+						console.log("oops 2");
 					}
 
 					// Move itself
@@ -176,32 +182,29 @@ $(document).ready(function() {
 				}
 				else{
 					switch(event.which) {
-				        case 38: // up
+				        case 38: // Up
 				        	var prevItem = element.parent().prev().children('div.tree_label');
 							if (prevItem.length){ // prevent el.blur if at end of list
 								event.preventDefault();
-								// el.blur();
 								prevItem.focus();
 							}
 				        	break;
 
-				        case 40: // down
+				        case 40: // Down
 				        	var nextItem = element.parent().next().children('div.tree_label');
 							if (nextItem.length){ // prevent el.blur if at end of list
 								event.preventDefault();
-								// el.blur();
 								nextItem.focus();
 							}
 				        	break;
 
-				        case 27: // esc
+				        case 27: // Esc
 				        	// restore state
 							document.execCommand('undo');
 							el.blur();
 				        	break;
 
-				        case 13: // new line
-				        	// Return/Enter key: 
+				        case 13: // Return/Enter key: 
 					        
 					        // 1. Save data if original != el.innerHTML
 				        	event.preventDefault();
@@ -270,6 +273,7 @@ $(document).ready(function() {
 			data = localCacheTree[item_id];
 		}
 		else{
+			loader.addClass('enabled'); // Show loader animation if the request takes too long
 			// GET ajax request to get details of the selected item
 			$.ajax({
 	            method: "GET",
@@ -278,7 +282,6 @@ $(document).ready(function() {
 	                item_id: item_id
 	            },
 	            success: function(json) {
-	            	loader.removeClass('enabled'); // Hide loader
 	            	data=json;
 	            	localCacheTree[item_id] = data;
 	            	if(data!=undefined){
@@ -306,6 +309,7 @@ $(document).ready(function() {
 						$('.breadcrumb-onepage').append(breadcrumb_li);
 						$('.breadcrumb-onepage').append(thisItem_li);
 			        }
+			        loader.removeClass('enabled'); // Hide loader
 	            }
 	        });
 		}
@@ -381,14 +385,11 @@ $(document).ready(function() {
 	};
 
 	// Expand branch: Get children via ajax and display
-	// @input: an input[type=checkbox] elemenet
+	// @input: an input[type=checkbox] element
 	var expandBranch = function(element){
-		// @input: an input[type=checkbox] elemenet
 		var toPrepend = $(element).siblings('ul.children');
 		
 		if(toPrepend.is(':empty')){ // Only fill in if the branch has not been filled
-			loader.addClass('enabled'); // Show loader if the request takes too long
-			// @input: an input[type=checkbox] elemenet
 			var item_id = $(element).data('itemid');
 			var data;
 
@@ -397,6 +398,7 @@ $(document).ready(function() {
 				data = localCacheDetail[item_id];
 			}
 			else{
+				loader.addClass('enabled'); // Show loader if the request takes too long
 				// GET ajax request to get children list
 				$.ajax({
 		            method: "GET",
@@ -405,7 +407,6 @@ $(document).ready(function() {
 		                item_id: item_id
 		            },
 		            success: function(json) {
-		            	loader.removeClass('enabled'); // Hide loader
 		            	data=json;
 		            	localCacheDetail[item_id] = data;
 		            	var children_html = "";
@@ -423,6 +424,7 @@ $(document).ready(function() {
 					        });
 				        }
 						toPrepend.prepend(children_html);
+						loader.removeClass('enabled'); // Hide loader
 		            }
 		        });
 			}
