@@ -84,7 +84,6 @@ $(document).ready(function() {
 					var newItemParentId = element.parent().prev().data('parentid');
 					
 					if (newItemParentId == undefined){
-						console.log(originalDetail);
 						if (element.parent().prev().length){
 							newItemParentId = element.parent().prev().data('itemid');
 						} else {
@@ -210,6 +209,10 @@ $(document).ready(function() {
 				        		event.preventDefault();
 				        		element.removeClass('expanded');
 				        		element.siblings('input[type=checkbox]').prop('checked',false);
+				        	} 
+				        	else if (element.parent('li').parent('ul').prev('div.tree_label').hasClass('expanded')){
+				        		event.preventDefault();
+				        		element.parent('li').parent('ul').prev('div.tree_label').focus();
 				        	}
 				        	break;
 
@@ -379,7 +382,6 @@ $(document).ready(function() {
 	var updateItem = function(element){
 		var data = {};
 		var itemId = $(element).data('itemid');
-		console.log("updating");
 		// If there is an itemId, this is an item already created
 		// so update its information
 		if (itemId){
@@ -397,7 +399,6 @@ $(document).ready(function() {
 		// if name, also update name in DOM tree
 		if (data['detail'] == 'name'){
 			var selector = 'div.tree_label[data-itemid='+itemId+']';
-			console.log(selector);
 			$(selector).text(data['value']);
 		}
 		// Purge cache after update
