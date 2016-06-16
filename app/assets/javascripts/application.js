@@ -16,11 +16,10 @@
 //= require bootstrap-sprockets
 //= require_tree .
 
-// Prototyping solution: Implementing cache in javascript at runtime
+// Prototyping Caching: Implementing cache in javascript at runtime
 // Pros: fast to implement
 // Cons: Cache at runtime (into memory), loses cache on refresh
 // Future direction: Either local storage, InnoDB, app cache,  (even service worker?)
-
 localCacheTree = {};
 localCacheDetail = {};
 
@@ -59,57 +58,15 @@ $(document).ready(function() {
 	$(document).on('change','input[type=checkbox]', function(){
 		if (!this.checked) {
 			//do nothing if go from uncheck to checked
+			console.log('checked');
 			return;
 		}
-		var toAppend = $(this).siblings('ul.children');
-		
-		if(toAppend.is(':empty')){ // Only fill in if the branch has not been filled
-			loader.addClass('enabled'); // Show loader if the request takes too long
-			var item_id = $(this).data('itemid');
-			var data;
-
-			if (localCacheDetail[item_id]){
-				loader.removeClass('enabled'); // Hide loader
-				data = localCacheDetail[item_id];
-			}
-			else{
-				// GET ajax request to get children list
-				$.ajax({
-		            method: "GET",
-		            async: false,
-		            url: "/get_children",
-		            data: {
-		                item_id: item_id
-		            },
-		            success: function(json) {
-		            	loader.removeClass('enabled'); // Hide loader
-		            	data=json;
-		            	localCacheDetail[item_id] = data;
-		            }
-		        });
-			}
-
-	        var children_html = "";
-
-	        // Display HTML of children
-	        if(data!=undefined){
-	        	var thisItemId = $(this).data('itemid');
-	        	data.forEach(function(item){
-	        		children_html += "<li class=\"item\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\">";
-	        		children_html += (item.has_children)? "<input type=\"checkbox\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"c" + item.id + "\"><label class=\"expander\" for=\"c" + item.id + "\"></label>\
-											<div class=\"tree_label item-name\" for=\"c" + item.id +"\" data-itemid=\"" + item.id + "\" data-name=\"name\" data-parentid=\"" + thisItemId +  "\" contenteditable=\"true\">" + item.name + "</div>\
-											<ul class=\"children\"></ul>":"<div class=\"tree_label item-name\" data-itemid=\"" + item.id + "\" contenteditable=\"true\" data-name=\"name\">" + item.name + "</div>"
-	        		children_html+="</li>";
-		        });
-	        }
-			toAppend.append(children_html);
-		}
+		expandBranch(this);
 	});
 	
 	// Live ajax save with HTML5 contenteditable
 	// $('span[contenteditable=true]').focus() would not work
 	// since it does not recognize newly inserted elements
-	
 	var focusContentEditable = function(element){
 		// console.log("Fired in: ", element);
 		var originalDetail = element.text();
@@ -165,22 +122,22 @@ $(document).ready(function() {
 					var parentItem = thisItem_li.parent('ul').parent('li'),
 						parentId = parentItem.parent('ul').parent('li').data('itemid');
 					
-					// remove expander
-					// Special Case: Delete tree structure if the element is the only child
+					// 1. Remove expander
+					// Special case 1: Delete tree structure if the element is the only child
 					if (element.parent().siblings().length == 0){
 						var toRemove = thisItem_li.parent('ul').siblings('input, label');
-						console.log(toRemove);
 						toRemove.remove();
 						thisItem_li.parent('ul').remove();
 					}
 
-					// move after its parent
+					// 3. Move after its parent
 					$(parentItem).after(thisItem_li);
-
+					
 					// Update the item information
 					if (parentId == undefined) { parentId = null;}
-					setChildrenParent(itemId, parentId);
+					// setChildrenParent(itemId, parentId);
 					loadDetail(element,false); // false == purge cache, get new info
+					element.focus(); // Keep focus on the item after Shift + tab
 					// return;
 					// Problem remaining: Cannot tab it after shift-tab 
 				}
@@ -188,28 +145,34 @@ $(document).ready(function() {
 		        	event.preventDefault();
 
 					// Exception: Top of list, no previous sibling
-					var prevItem = element.parent().prev();
+					var prevItem = element.parent('li').prev('li');
 					if (prevItem.length == 0){ return; }
 
 					var itemId = element.data("itemid");
 					var parentId = prevItem.data("itemid");
 
+					// Expand the tree if prev item has children
+					if (prevItem.children('input[type=checkbox]').length != 0){
+						console.log('yo');
+						expandBranch(prevItem.children('input[type=checkbox]'));
+					}
+					
 					// Only insert ul place holder if prev sibling does not have any child
 					if (prevItem.children('ul.children').length == 0){
 						var toPrepend = '<input type="checkbox" data-itemid="' + parentId + '" id="c' + parentId + '"><label class="expander" for="c'+parentId+'"></label>';
-						$(toPrepend).prependTo(element.parent().prev());
+						$(toPrepend).prependTo(prevItem);
 						
 						var toAppend = '<ul class="children"></ul>';
-						$(toAppend).appendTo(element.parent().prev());
+						$(toAppend).appendTo(prevItem);
 					}
 
-					// move itself
+					// Move itself
 					element.parent().appendTo(prevItem.children('ul.children'));
-					// expand the tree
+					// Expand the tree
 					element.parent().parent().siblings('input[type=checkbox]').prop('checked','true');
-					setChildrenParent(itemId, parentId);
+					// setChildrenParent(itemId, parentId);
 					loadDetail(element,false); // false == purge cache, get new info
-					return;
+					element.focus(); // Keep focus on the item after tab
 				}
 				else{
 					switch(event.which) {
@@ -245,15 +208,8 @@ $(document).ready(function() {
 					        var contentText = element.text();
 					        
 					        if(contentText != originalDetail && $.trim(contentText) != ""){ // trim trailing spaces before comparison
-									updateItem(element);
+								updateItem(element);
 							} 
-							// Only create new item if new line was empty
-							// else if (originalDetail=='') {
-							// 	var newItemName = contentText;
-							// 	var newItemParentId = $(element).parent('.item').data('itemid');
-							// 	createItem(element, newItemName, newItemParentId);
-							// 	originalDetail = newItemName;
-							// }
 							if (element.hasClass('tree_label')){
 								// 2. Create new item below it
 								var newItemHtml = "<li class=\"item\" data-itemid=\"\" ><div class=\"tree_label item-name\" data-itemid=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
@@ -261,7 +217,6 @@ $(document).ready(function() {
 								var newlyCreatedItem = element.parent().next().children('div.tree_label');
 								newlyCreatedItem.focus();
 								focusContentEditable(newlyCreatedItem);
-
 					        }
 				        	break;
 
@@ -318,7 +273,6 @@ $(document).ready(function() {
 			// GET ajax request to get details of the selected item
 			$.ajax({
 	            method: "GET",
-	            async: false,
 	            url: "/get_detail",
 	            data: {
 	                item_id: item_id
@@ -327,35 +281,34 @@ $(document).ready(function() {
 	            	loader.removeClass('enabled'); // Hide loader
 	            	data=json;
 	            	localCacheTree[item_id] = data;
+	            	if(data!=undefined){
+			        	var object = data[0];
+			        	var parents = data[1];
+			        	$('.object-editor span.item-id').html(object.id);
+						$('.object-editor span.item-name').html(object.name);
+						$('.object-editor span.item-parent').html(object.parent_name);
+						$('.object-editor span.item-desc').html(object.description);
+						$('.object-editor span.item-by').html(object.by_name);
+
+						$('.object-editor span.item-id').attr('data-itemid', item_id);
+						$('.object-editor span.item-name').attr('data-itemid', item_id);
+						$('.object-editor span.item-parent').attr('data-itemid', item_id);
+						$('.object-editor span.item-desc').attr('data-itemid', item_id);
+						$('.object-editor span.item-by').attr('data-itemid', item_id);
+
+						var breadcrumb_li = "";
+						var parents_li = "<li><a class=\"parents\" href=\"#\">"
+						parents.forEach(function(item){
+							breadcrumb_li += parents_li + item.name + "</a></li>";
+						});
+						var thisItem_li = "<li class=\"selected\">" + object.name + "</li>";
+						$('.breadcrumb-onepage').html("");
+						$('.breadcrumb-onepage').append(breadcrumb_li);
+						$('.breadcrumb-onepage').append(thisItem_li);
+			        }
 	            }
 	        });
 		}
-
-		if(data!=undefined){
-        	var object = data[0];
-        	var parents = data[1];
-        	$('.object-editor span.item-id').html(object.id);
-			$('.object-editor span.item-name').html(object.name);
-			$('.object-editor span.item-parent').html(object.parent_name);
-			$('.object-editor span.item-desc').html(object.description);
-			$('.object-editor span.item-by').html(object.by_name);
-
-			$('.object-editor span.item-id').attr('data-itemid', item_id);
-			$('.object-editor span.item-name').attr('data-itemid', item_id);
-			$('.object-editor span.item-parent').attr('data-itemid', item_id);
-			$('.object-editor span.item-desc').attr('data-itemid', item_id);
-			$('.object-editor span.item-by').attr('data-itemid', item_id);
-
-			var breadcrumb_li = "";
-			var parents_li = "<li><a class=\"parents\" href=\"#\">"
-			parents.forEach(function(item){
-				breadcrumb_li += parents_li + item.name + "</a></li>";
-			});
-			var thisItem_li = "<li class=\"selected\">" + object.name + "</li>";
-			$('.breadcrumb-onepage').html("");
-			$('.breadcrumb-onepage').append(breadcrumb_li);
-			$('.breadcrumb-onepage').append(thisItem_li);
-        }
     }
 
 	// Update detail of item
@@ -420,13 +373,61 @@ $(document).ready(function() {
 		$.ajax({
 			url: '/update_parent_children',
 			method: "POST",
-			async: true,
 			data: {
 				parent_id: parent_id,
 				item_id: child_id,
 			},
 		});
 	};
+
+	// Expand branch: Get children via ajax and display
+	// @input: an input[type=checkbox] elemenet
+	var expandBranch = function(element){
+		// @input: an input[type=checkbox] elemenet
+		var toPrepend = $(element).siblings('ul.children');
+		
+		if(toPrepend.is(':empty')){ // Only fill in if the branch has not been filled
+			loader.addClass('enabled'); // Show loader if the request takes too long
+			// @input: an input[type=checkbox] elemenet
+			var item_id = $(element).data('itemid');
+			var data;
+
+			if (localCacheDetail[item_id]){
+				loader.removeClass('enabled'); // Hide loader
+				data = localCacheDetail[item_id];
+			}
+			else{
+				// GET ajax request to get children list
+				$.ajax({
+		            method: "GET",
+		            url: "/get_children",
+		            data: {
+		                item_id: item_id
+		            },
+		            success: function(json) {
+		            	loader.removeClass('enabled'); // Hide loader
+		            	data=json;
+		            	localCacheDetail[item_id] = data;
+		            	var children_html = "";
+
+				        // Display HTML of children
+				        if(data!=undefined){
+				        	// @input: an input[type=checkbox] elemenet
+				        	var thisItemId = $(element).data('itemid');
+				        	data.forEach(function(item){
+				        		children_html += "<li class=\"item\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\">";
+				        		children_html += (item.has_children)? "<input type=\"checkbox\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"c" + item.id + "\"><label class=\"expander\" for=\"c" + item.id + "\"></label>\
+										<div class=\"tree_label item-name\" for=\"c" + item.id +"\" data-itemid=\"" + item.id + "\" data-name=\"name\" data-parentid=\"" + thisItemId +  "\" contenteditable=\"true\">" + item.name + "</div>\
+										<ul class=\"children\"></ul>":"<div class=\"tree_label item-name\" data-itemid=\"" + item.id + "\" contenteditable=\"true\" data-name=\"name\">" + item.name + "</div>"
+				        		children_html+="</li>";
+					        });
+				        }
+						toPrepend.prepend(children_html);
+		            }
+		        });
+			}
+		}
+	}
 
 	// END HELPER FUNCTIONS ==============================================
 });
@@ -451,7 +452,7 @@ function setFontSize(el) {
 $(function() {
   
   $('#fontSize')
-    .bind('change', function(){ setFontSize($(this)); })
+    .on('input', function(){ setFontSize($(this)); })
     .bind('keyup', function(e){
       if (e.keyCode == 27) {
         $(this).val('1');
