@@ -72,33 +72,30 @@
 						<h3>Tree</h3>
 					</div>
 
-					<div class="switch-container">
-					    <label class="switch">
-					      <input type="checkbox" class="switch-input">
-					      <span class="switch-label" data-on="Move items" data-off="Text Edit"></span>
-					      <span class="switch-handle"></span>
-					    </label>
-				  	</div>
-
 					<ul class="tree" id="sortable">
-						<% if @itemsWithNoParent.length != 0 
-						@itemsWithNoParent.each do |item|
-						has_children = item.hasChildren? %>
-							<li class="item" data-itemid="<%= item.id %>" id="item_<%= item.id %>">
-							<% if(has_children) %>
-								<input type="checkbox" data-itemid="<%= item.id %>" id="c<%= item.id %>"/>
-								<label class="expander" for="c<%= item.id %>"></label>
-							<% end %>
-							<div class="tree_label item-name" data-itemid="<%= item.id %>" data-name="name" contenteditable="true"><%= item.name %></div>
-								<!-- <i class="fa fa-bars mover" aria-hidden="true"></i> -->
-							<ul class="children"></ul>
-							</li>
-						<% end %>
-						<% else %>
-							<li class="item" id="item_<%= item.id %>">
-								<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>
-							</li>
-						<% end %>
+						<li class="item root" data-itemid="0" id="0">
+							<div class="root-fake-handler"></div>
+							<ul class="children">
+								<% if @itemsWithNoParent.length != 0 
+								@itemsWithNoParent.each do |item|
+								has_children = item.hasChildren? %>
+									<li class="item" data-itemid="<%= item.id %>" id="item_<%= item.id %>">
+									<i class="fa fa-bars mover" aria-hidden="true"></i>
+									<% if(has_children) %>
+										<input type="checkbox" data-itemid="<%= item.id %>" id="c<%= item.id %>"/>
+										<label class="expander" for="c<%= item.id %>"></label>
+									<% end %>
+									<div class="tree_label item-name" data-itemid="<%= item.id %>" data-name="name" contenteditable="true"><%= item.name %></div>
+									<ul class="children"></ul>
+									</li>
+								<% end %>
+								<% else %>
+									<li class="item" id="item_<%= item.id %>">
+										<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>
+									</li>
+								<% end %>
+							</ul>
+						</li>
 					</ul>
 				</div>
 				<div class="object-editor closed">

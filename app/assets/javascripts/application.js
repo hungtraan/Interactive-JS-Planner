@@ -30,40 +30,68 @@ $(document).ready(function() {
 
 	// Change cursor on mouse hold to specify moveability
 	$('.tree_label').mousedown(function(e){
-		e.preventDefault();
+		if (!$('.switch-input').hasClass('textedit')){
+			e.preventDefault();
+		}
 		$(this).css('cursor', 'move');
 	});
 	$('.tree_label').mouseup(function(e){ 
-		e.preventDefault();
 	   $(this).css('cursor', 'auto');
 	});
 
+	// $('[contenteditable=true]').each ( function(){
+	//     $(this)[0].onmousedown = function() {
+	//     	// $('#sortable').nestedSortable("destroy");
+
+	//         // this.focus();
+	//     };
+	// });
+
+	// $(this).toggleClass("textedit moveitem");
+	var firstLocationRemembered = 0;
+	var originalSerialized = '';
+	var serialized = '';
 	$('#sortable').nestedSortable({
-        handle: 'div',
-        items: 'li',
+        handle: 'i.mover',
         helper:	'clone',
+        items: 'li',
         toleranceElement: '> div',
+        opacity: .6,
         listType: 'ul',
         forcePlaceholderSize: true,
         placeholder: 'placeholder',
         isTree: true,
-		expandOnHover: 700,
 		startCollapsed: false,
-		change: function(){
-			console.log($('#sortable').nestedSortable('serialize'));
+		protectRoot: true,
+		rootID: 0,
+		revert: 250,
+		tabSize: 25,
+		tolerance: 'pointer',
+		// change: function(){
+		// 	// serialized = $('#sortable').nestedSortable('serialize');
+		// 	// // var toArray = $('#sortable').nestedSortable('toArray', {startDepthCount: 0});
+		// 	// console.log(serialized);
+		// },
+		sort: function(){
+			if(!firstLocationRemembered){
+				originalSerialized = $('#sortable').nestedSortable('serialize');
+				firstLocationRemembered = 1;
+			}
 		},
-		// sort: function(){
+		relocate: function(){
+			serialized = $('#sortable').nestedSortable('serialize');
+			if (originalSerialized !== serialized){
+				// do stuff here to update ordering and relatioships of items
+				reordering(serialized);
+			}
+			firstLocationRemembered = 0;
 
-		// }
-		// relocate: function(){
-
-		// }
-    });
-
- //    if (prevItem.children('ul.children').length === 0){
-	// 	var toPrepend = '<input type="checkbox" data-itemid="' + parentId + '" id="c' + parentId + '"><label class="expander" for="c'+parentId+'"></label>';
-	// 	$(toPrepend).prependTo(prevItem);
-	// }
+		},
+		revert: function(){
+			firstLocationRemembered = 1;
+		}
+	});
+	$('[contenteditable=true]').unbind(); // to make contenteditable work again with nestedsortable
 	
 	// Highlight and Load detail when clicking on an item in tree
 	$('.tree').on('click','.tree_label.item-name', function(){
@@ -79,11 +107,13 @@ $(document).ready(function() {
 			if (item_id === '') {return;}
 			loadDetail($(this));
 		}
+		$('.tree_label.item-name').removeClass('selected');
 		$(this).addClass('selected');
+
 	});
 
 	// Expand and get children via AJAX
-	$(document).on('change','input[type=checkbox]', function(){
+	$(document).on('change','li.item > input[type=checkbox]', function(){
 		if (!this.checked) { //do nothing if go from uncheck to checked
 			$(this).siblings('div.tree_label').removeClass('expanded');
 			return;
@@ -527,6 +557,26 @@ $(document).ready(function() {
 		}
 	};
 
+	var reordering = function(serialized){
+		var tree = [];
+		var itemArr = serialized.split("&");
+		// console.log(itemArr);
+		for (var itemIdx in itemArr){
+			var itemObject = {};
+			var i = itemArr[itemIdx].split("=");
+			var numberRegex = /\d+|null/;
+			itemObject.item_id = i[0].match(numberRegex)[0];
+			itemObject.parent_id = i[1].match(numberRegex)[0];
+			itemObject.ordering = itemIdx;
+			tree.push(itemObject);
+		}
+		console.log(tree);
+		
+	 	//  if (prevItem.children('ul.children').length === 0){
+		// 	var toPrepend = '<input type="checkbox" data-itemid="' + parentId + '" id="c' + parentId + '"><label class="expander" for="c'+parentId+'"></label>';
+		// 	$(toPrepend).prependTo(prevItem);
+		// }
+	}
 	// END HELPER FUNCTIONS ==============================================
 });
 
