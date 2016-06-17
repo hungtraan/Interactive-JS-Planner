@@ -13,6 +13,7 @@
 //
 //= require jquery
 //= require jquery_ujs
+//= require jquery-ui/sortable
 //= require turbolinks
 //= require bootstrap-sprockets
 //= require_tree .
@@ -27,20 +28,43 @@ localCacheDetail = {};
 $(document).ready(function() {
 	var loader = $('.loader');
 
-	//
-	$('.first-item-placeholder').focus( function(){
-		console.log('a');
-		$(this).text('');
-	});
-
 	// Change cursor on mouse hold to specify moveability
-	$('.tree_label').mousedown(function(){
-	   $(this).css('cursor', 'move');
+	$('.tree_label').mousedown(function(e){
+		e.preventDefault();
+		$(this).css('cursor', 'move');
 	});
-	$('.tree_label').mouseup(function(){ 
+	$('.tree_label').mouseup(function(e){ 
+		e.preventDefault();
 	   $(this).css('cursor', 'auto');
 	});
 
+	$('#sortable').nestedSortable({
+        handle: 'div',
+        items: 'li',
+        helper:	'clone',
+        toleranceElement: '> div',
+        listType: 'ul',
+        forcePlaceholderSize: true,
+        placeholder: 'placeholder',
+        isTree: true,
+		expandOnHover: 700,
+		startCollapsed: false,
+		change: function(){
+			console.log($('#sortable').nestedSortable('serialize'));
+		},
+		// sort: function(){
+
+		// }
+		// relocate: function(){
+
+		// }
+    });
+
+ //    if (prevItem.children('ul.children').length === 0){
+	// 	var toPrepend = '<input type="checkbox" data-itemid="' + parentId + '" id="c' + parentId + '"><label class="expander" for="c'+parentId+'"></label>';
+	// 	$(toPrepend).prependTo(prevItem);
+	// }
+	
 	// Highlight and Load detail when clicking on an item in tree
 	$('.tree').on('click','.tree_label.item-name', function(){
 		var editor = $('.object-editor');
@@ -188,9 +212,6 @@ $(document).ready(function() {
 					if (prevItem.children('ul.children').length === 0){
 						var toPrepend = '<input type="checkbox" data-itemid="' + parentId + '" id="c' + parentId + '"><label class="expander" for="c'+parentId+'"></label>';
 						$(toPrepend).prependTo(prevItem);
-						
-						var toAppend = '<ul class="children"></ul>';
-						$(toAppend).appendTo(prevItem);
 					}
 					
 					// Move itself
@@ -281,7 +302,7 @@ $(document).ready(function() {
 							} 
 							if (element.hasClass('tree_label')){
 								// 2. Create new item below it
-								var newItemHtml = "<li class=\"item\" data-itemid=\"\" ><div class=\"tree_label item-name\" data-itemid=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
+								var newItemHtml = "<li class=\"item\" data-itemid=\"\" id=\"\"><div class=\"tree_label item-name\" data-itemid=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
 								$(newItemHtml).insertAfter(element.parent());
 								var newlyCreatedItem = element.parent().next().children('div.tree_label');
 								newlyCreatedItem.focus();
@@ -323,6 +344,7 @@ $(document).ready(function() {
     				newItemId = json.id;
     				$(element).parent().attr('data-itemid',newItemId);
     				$(element).attr('data-itemid',newItemId);
+    				$(element).attr('id','item_'+newItemId);
     				$(element).parent().attr('data-parentid', parent_id);
     			}
     		}
@@ -459,7 +481,10 @@ $(document).ready(function() {
 	// @input: an input[type=checkbox] element
 	var expandBranch = function(element){
 		var toPrepend = $(element).siblings('ul.children');
-		
+		if (toPrepend.length === 0){
+			$(element).parent().append('<ul class="children"></ul>')
+		}
+		toPrepend = $(element).siblings('ul.children');
 		if(toPrepend.is(':empty')){ // Only fill in if the branch has not been filled
 			var item_id = $(element).data('itemid');
 			var data;
@@ -487,10 +512,10 @@ $(document).ready(function() {
 				        	// @input: an input[type=checkbox] elemenet
 				        	var thisItemId = $(element).data('itemid');
 				        	data.forEach(function(item){
-				        		children_html += "<li class=\"item\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\">";
+				        		children_html += "<li class=\"item\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"item_" + item.id + "\">";
 				        		children_html += (item.has_children)? "<input type=\"checkbox\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"c" + item.id + "\"><label class=\"expander\" for=\"c" + item.id + "\"></label>\
 										<div class=\"tree_label item-name\" for=\"c" + item.id +"\" data-itemid=\"" + item.id + "\" data-name=\"name\" data-parentid=\"" + thisItemId +  "\" contenteditable=\"true\">" + item.name + "</div>\
-										<ul class=\"children\"></ul>":"<div class=\"tree_label item-name\" data-itemid=\"" + item.id + "\" contenteditable=\"true\" data-name=\"name\">" + item.name + "</div>";
+										<ul class=\"children\"  id=\"sortable\"></ul>":"<div class=\"tree_label item-name\" data-itemid=\"" + item.id + "\" contenteditable=\"true\" data-name=\"name\">" + item.name + "</div>";
 				        		children_html+="</li>";
 					        });
 				        }
