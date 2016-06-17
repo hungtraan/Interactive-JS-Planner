@@ -67,6 +67,9 @@
 						<label for="fontSize">Tree Zoom</label>
 						<input type="range" value="1" id="fontSize" step="0.05" min="1" max="1.5" />
 					</div>
+					<div class="project-title">
+						<h3>Tree</h3>
+					</div>
 
 					<ul class="tree">
 						<% if @itemsWithNoParent.length != 0 
@@ -78,9 +81,11 @@
 								<label class="expander" for="c<%= item.id %>"></label>
 								
 								<div class="tree_label item-name" data-itemid="<%= item.id %>" data-name="name" contenteditable="true"><%= item.name %></div>
+								<i class="fa fa-bars mover" aria-hidden="true"></i>
 								<ul class="children"></ul>
 							<% else %>
 								<div class="tree_label item-name" data-itemid="<%= item.id %>" contenteditable="true" data-name="name"><%= item.name %></div>
+								<i class="fa fa-bars mover" aria-hidden="true"></i>
 							<% end %>
 							</li>
 						<% end %>

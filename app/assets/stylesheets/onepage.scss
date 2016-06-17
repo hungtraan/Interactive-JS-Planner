@@ -49,7 +49,7 @@ $primary-color : #00b7f1;
     padding: 15px;
 
 	div[contenteditable]:not(.first-item-placeholder):hover:after {
-		content: ' Click to view detail/edit';
+		// content: ' Click to view detail/edit';
 		font-style: italic;
 		// font-size: 12px;
 		color: #ccc;
@@ -165,7 +165,7 @@ $primary-color : #00b7f1;
 		  	li {
 			    line-height: 1.2;
 			    position: relative;
-			    padding: 0 0 1em 1em;
+			    padding: 0 0 1em 2em;
 			    list-style: none;
 			    label.expander {
 				  	width: 1em;
@@ -175,7 +175,7 @@ $primary-color : #00b7f1;
 				    position: relative;
 				    z-index: 100;
 				    float: left;
-				    margin: 0 1em 0 -2em;
+				    margin: 0 1em 0 -3em;
 				    width: 1em;
 				    height: 1em;
 				    border-radius: 1em;
@@ -191,9 +191,17 @@ $primary-color : #00b7f1;
 						content: '–';
 					}
 				}
+				&:hover > .mover{
+					display: inline-block;
+				}
+				> .mover{
+					display: none;
+					cursor: move;
+					color: #ccc;
+				}
 			}
 			ul li {
-		    	padding: 1em 0 0 1em;
+		    	padding: 1em 0 0 2em;
 			}
 			> li:last-child {
 		    	padding-bottom: 0;
@@ -211,7 +219,6 @@ $primary-color : #00b7f1;
 		.tree_label {
 		  position: relative;
 		  display: inline-block;
-		  // background: #fff;
 		  &:last-child:before{
 		  	border-bottom: 1px solid #777;
 		  }
@@ -226,10 +233,10 @@ $primary-color : #00b7f1;
 			&:not(.first-item-placeholder):before {
 				position: absolute;
 				top: 0;
-				left: -1.5em;
+				left: -2.5em;
 				display: block;
 				height: 0.5em;
-				width: 1em;
+				width: 2em;
 				border-bottom: 1px solid #777;
 				border-left: 1px solid #777;
 				border-radius: 0 0 0 .3em;

@@ -1,3 +1,4 @@
+/*jshint multistr: true */
 // This is a manifest file that'll be compiled into application.js, which will include all the files
 // listed below.
 //
@@ -51,7 +52,7 @@ $(document).ready(function() {
 		}
 		if(!$(this).hasClass('selected')){
 			var item_id = $(this).data('itemid');
-			if (item_id == '') {return;}
+			if (item_id === '') {return;}
 			loadDetail($(this));
 		}
 		$(this).addClass('selected');
@@ -82,14 +83,14 @@ $(document).ready(function() {
 			// If blank content to new content --> create item
 			// If totally blank item --> delete item
 			if (element.hasClass('tree_label')){
-				if (originalDetail == '' && contentText != originalDetail && $.trim(contentText) != ""){ // trim trailing spaces before comparison
+				if (originalDetail === '' && contentText !== originalDetail && $.trim(contentText) !== ""){ // trim trailing spaces before comparison
 					var newItemName = contentText;
 					originalDetail = newItemName;
 
 					var newItemParentId = element.parent().prev().data('parentid');
 					
-					if (newItemParentId == undefined){
-						if (element.parent().prev().length && element.parent('li').parent('ul').length == 0){
+					if (newItemParentId === undefined){
+						if (element.parent().prev().length && element.parent('li').parent('ul').length === 0){
 							newItemParentId = element.parent().prev().data('itemid');
 						} else {
 							newItemParentId = null;
@@ -97,21 +98,21 @@ $(document).ready(function() {
 					}
 					createItem(element, newItemName, newItemParentId);
 					event.stopImmediatePropagation();
-				} 
-				else if ((element.data('itemid') != undefined && element.data('itemid') != '') && (contentText == '' || contentText == null)){ 
+				}
+				else if ((element.data('itemid') !== undefined && element.data('itemid') !== '') && (contentText === '' || contentText === null)){ 
 					// Remove if content is blank, but only for those with itemid
 					// i.e. not a new line
 					$(element).parent().remove();
 					deleteItem(element);
 					return;
 				}
-				else if (element.data('itemid') != '' && contentText != '' &&  element.data('itemid') == ''){
+				else if (element.data('itemid') !== '' && contentText !== '' &&  element.data('itemid') === ''){
 					var newItemName = contentText; 
 					createItem(element, newItemName, null);
 					event.stopImmediatePropagation();
 					return;
 				}
-				else if (element.data('itemid') == undefined || element.data('itemid') == ''){
+				else if (element.data('itemid') === undefined || element.data('itemid') === ''){
 					return;
 				}
 			}
@@ -149,7 +150,7 @@ $(document).ready(function() {
 						parentId = parentItem.parent('ul').parent('li').data('itemid');
 					
 					// 1. Remove expander & parent's subtree if if the element is the only child
-					if (element.parent().siblings().length == 0){
+					if (element.parent().siblings().length === 0){
 						var toRemove = thisItem_li.parent('ul').siblings('input, label');
 						toRemove.remove();
 						thisItem_li.parent('ul').remove();
@@ -159,7 +160,7 @@ $(document).ready(function() {
 					$(parentItem).after(thisItem_li);
 					
 					// 3. Update the item information
-					if (parentId == undefined) { parentId = null;}
+					if (parentId === undefined) { parentId = null;}
 					setChildrenParent(itemId, parentId);
 					loadDetail(element,false); // false == purge cache, get new info
 					element.focus(); // Keep focus on the item after Shift + tab
@@ -173,7 +174,7 @@ $(document).ready(function() {
 
 					// Exception: Top of list, no previous sibling
 					var prevItem = element.parent('li').prev('li');
-					if (prevItem.length == 0){ return; } 
+					if (prevItem.length === 0){ return; } 
 
 					var itemId = element.data("itemid");
 					var parentId = prevItem.data("itemid");
@@ -184,7 +185,7 @@ $(document).ready(function() {
 					}
 					
 					// Only insert ul place holder if prev sibling does not have any child
-					if (prevItem.children('ul.children').length == 0){
+					if (prevItem.children('ul.children').length === 0){
 						var toPrepend = '<input type="checkbox" data-itemid="' + parentId + '" id="c' + parentId + '"><label class="expander" for="c'+parentId+'"></label>';
 						$(toPrepend).prependTo(prevItem);
 						
@@ -198,7 +199,7 @@ $(document).ready(function() {
 					element.parent().parent().siblings('input[type=checkbox]').prop('checked','true');
 					
 					// Update relationship
-					if (element.data('itemid') != undefined && element.data('itemid') != ''){
+					if (element.data('itemid') !== undefined && element.data('itemid') !== ''){
 						setChildrenParent(itemId, parentId);
 						loadDetail(element,false); // false = purge cache, get new info
 					}
@@ -275,7 +276,7 @@ $(document).ready(function() {
 				        	event.preventDefault();
 					        var contentText = element.text();
 					        
-					        if(contentText != originalDetail && $.trim(contentText) != ""){ // trim trailing spaces before comparison
+					        if(contentText !== originalDetail && $.trim(contentText) !== ""){ // trim trailing spaces before comparison
 								updateItem(element);
 							} 
 							if (element.hasClass('tree_label')){
@@ -334,7 +335,7 @@ $(document).ready(function() {
     var loadDetail = function(element, useCache=true) {
     	var data;
     	var item_id = element.data('itemid');
-    	if (item_id == undefined) {return;}
+    	if (item_id === undefined) {return;}
     	if (localCacheTree[item_id] && useCache){
 			loader.removeClass('enabled'); // Hide loader
 			data = localCacheTree[item_id];
@@ -352,13 +353,13 @@ $(document).ready(function() {
 	            success: function(json) {
 	            	data=json;
 	            	localCacheTree[item_id] = data;
-	            	if(data!=undefined){
+	            	if(data!==undefined){
 			        	showDetailOnSide(data, item_id);
 			        }
 	            }
 	        });
 		}
-    }
+    };
 
     var showDetailOnSide = function(data, item_id){
     	var object = data[0];
@@ -376,7 +377,7 @@ $(document).ready(function() {
 		$('.object-editor span.item-by').attr('data-itemid', item_id);
 
 		var breadcrumb_li = "";
-		var parents_li = "<li><a class=\"parents\" href=\"#\">"
+		var parents_li = "<li><a class=\"parents\" href=\"#\">";
 		parents.forEach(function(item){
 			breadcrumb_li += parents_li + item.name + "</a></li>";
 		});
@@ -385,7 +386,7 @@ $(document).ready(function() {
 		$('.breadcrumb-onepage').append(breadcrumb_li);
 		$('.breadcrumb-onepage').append(thisItem_li);
 		loader.removeClass('enabled'); // Hide loader
-    }
+    };
 
 	// Update detail of item
 	// @input jquery element whose text has been updated
@@ -396,9 +397,9 @@ $(document).ready(function() {
 		// If there is an itemId, this is an item already created
 		// so update its information
 		if (itemId){
-			data['item_id'] = itemId;
-			data['detail'] = $(element).data('name');
-			data['value'] = element.text();
+			data.item_id = itemId;
+			data.detail = $(element).data('name');
+			data.value = element.text();
 			// Send an ajax request to update the field
 			$.ajax({
 				url: '/update_individual_detail',
@@ -408,9 +409,9 @@ $(document).ready(function() {
 		}
 
 		// if name, also update name in DOM tree
-		if (data['detail'] == 'name'){
+		if (data.detail == 'name'){
 			var selector = 'div.tree_label[data-itemid='+itemId+']';
-			$(selector).text(data['value']);
+			$(selector).text(data.value);
 		}
 		// Purge cache after update
 		localCacheTree[itemId] = null;
@@ -427,7 +428,7 @@ $(document).ready(function() {
 		// If there is an itemId, this is an item already created
 		// so update its information
 		if (itemId){
-			data['item_id'] = itemId;
+			data.item_id = itemId;
 			// Send an ajax request to update the field
 			$.ajax({
 				url: '/delete_item',
@@ -482,14 +483,14 @@ $(document).ready(function() {
 		            	var children_html = "";
 
 				        // Display HTML of children
-				        if(data!=undefined){
+				        if(data!==undefined){
 				        	// @input: an input[type=checkbox] elemenet
 				        	var thisItemId = $(element).data('itemid');
 				        	data.forEach(function(item){
 				        		children_html += "<li class=\"item\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\">";
 				        		children_html += (item.has_children)? "<input type=\"checkbox\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"c" + item.id + "\"><label class=\"expander\" for=\"c" + item.id + "\"></label>\
 										<div class=\"tree_label item-name\" for=\"c" + item.id +"\" data-itemid=\"" + item.id + "\" data-name=\"name\" data-parentid=\"" + thisItemId +  "\" contenteditable=\"true\">" + item.name + "</div>\
-										<ul class=\"children\"></ul>":"<div class=\"tree_label item-name\" data-itemid=\"" + item.id + "\" contenteditable=\"true\" data-name=\"name\">" + item.name + "</div>"
+										<ul class=\"children\"></ul>":"<div class=\"tree_label item-name\" data-itemid=\"" + item.id + "\" contenteditable=\"true\" data-name=\"name\">" + item.name + "</div>";
 				        		children_html+="</li>";
 					        });
 				        }
@@ -499,7 +500,7 @@ $(document).ready(function() {
 		        });
 			}
 		}
-	}
+	};
 
 	// END HELPER FUNCTIONS ==============================================
 });
@@ -522,5 +523,7 @@ function setFontSize(el) {
 }
 
 $(function() {
-  $('#fontSize').on('input', function(){ setFontSize($(this)); }) 
+  $('#fontSize').on('input', function(){ 
+  	setFontSize($(this)); 
+  });
 });
