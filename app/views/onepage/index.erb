@@ -85,7 +85,7 @@
 										<input type="checkbox" data-itemid="<%= item.id %>" id="c<%= item.id %>"/>
 										<label class="expander" for="c<%= item.id %>"></label>
 									<% end %>
-									<div class="tree_label item-name" data-itemid="<%= item.id %>" data-name="name" contenteditable="true"><%= item.name %></div>
+									<div class="tree_label item-name" data-itemid="<%= item.id %>" data-name="name" contenteditable="true" id="item_<%= item.id %>"><%= item.name %></div>
 									<ul class="children"></ul>
 									</li>
 								<% end %>

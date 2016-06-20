@@ -30,12 +30,11 @@ $(document).ready(function() {
 
 	// Change cursor on mouse hold to specify moveability
 	$('.tree_label').mousedown(function(e){
-		if (!$('.switch-input').hasClass('textedit')){
-			e.preventDefault();
-		}
+		e.preventDefault();
 		$(this).css('cursor', 'move');
 	});
 	$('.tree_label').mouseup(function(e){ 
+		e.preventDefault();
 	   $(this).css('cursor', 'auto');
 	});
 
@@ -94,7 +93,7 @@ $(document).ready(function() {
 	$('[contenteditable=true]').unbind(); // to make contenteditable work again with nestedsortable
 	
 	// Highlight and Load detail when clicking on an item in tree
-	$('.tree').on('click','.tree_label.item-name', function(){
+	$('.tree').on('click','.tree_label.item-name', function(event){
 		var editor = $('.object-editor');
 		if(!editor.hasClass('is-open')){
 			$('.object-tree, .new-tree').toggleClass('col-md-12 col-md-8');
@@ -103,73 +102,76 @@ $(document).ready(function() {
 			editor.addClass('is-open');
 		}
 		if(!$(this).hasClass('selected')){
-			var item_id = $(this).data('itemid');
+			var item_id = $(this).attr('data-itemid');
 			if (item_id === '') {return;}
 			loadDetail($(this));
 		}
 		$('.tree_label.item-name').removeClass('selected');
 		$(this).addClass('selected');
-
+		event.stopImmediatePropagation();
 	});
 
 	// Expand and get children via AJAX
 	$(document).on('change','li.item > input[type=checkbox]', function(){
 		if (!this.checked) { //do nothing if go from uncheck to checked
 			$(this).siblings('div.tree_label').removeClass('expanded');
+			$(this).parent('li').removeClass('expanded');
 			return;
 		}
 		expandBranch(this);
+		$(this).parent('li').addClass('expanded');
 		$(this).siblings('div.tree_label').addClass('expanded');
 	});
 	
+	$('.item').on('focus','.item-name',function(e){
+		var element = $(this);
+		focusContentEditable(element);
+	});
+
+	$('.object-editor').on('focus','span[contenteditable=true]',function(e){
+		var element = $(this);
+		focusContentEditable(element);
+	});
+
 	// Live ajax save with HTML5 contenteditable
 	// $('span[contenteditable=true]').focus() would not work
 	// since it does not recognize newly inserted elements
 	var focusContentEditable = function(element){
-		event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
 		var originalDetail = element.text();
 		
 		element.focusout(function(event){
+			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
 			var contentText = element.text();
-			
+			console.log('out', element);
 			// When focus out (move on to a new line, clicking out of editable area)
 			// If old content to new content --> update item
 			// If blank content to new content --> create item
 			// If totally blank item --> delete item
 			if (element.hasClass('tree_label')){
-				if (originalDetail === '' && contentText !== originalDetail && $.trim(contentText) !== ""){ // trim trailing spaces before comparison
+				if (originalDetail === '' && contentText !== originalDetail && $.trim(contentText) !== ''){ // trim trailing spaces before comparison
 					var newItemName = contentText;
 					originalDetail = newItemName;
 
-					var newItemParentId = element.parent().prev().data('parentid');
-					
-					if (newItemParentId === undefined){
-						if (element.parent().prev().length && element.parent('li').parent('ul').length === 0){
-							newItemParentId = element.parent().prev().data('itemid');
-						} else {
-							newItemParentId = null;
-						}
-					}
+					var newItemParentId = element.parent('li').parent('ul').parent('li').attr('data-itemid');
+					if (newItemParentId == 0){newItemParentId = null;}
 					createItem(element, newItemName, newItemParentId);
-					event.stopImmediatePropagation();
+					return;
 				}
-				else if ((element.data('itemid') !== undefined && element.data('itemid') !== '') && (contentText === '' || contentText === null)){ 
+				else if ((element.attr('data-itemid') !== undefined && element.attr('data-itemid') !== '') && (contentText === '' || contentText === null)){ 
 					// Remove if content is blank, but only for those with itemid
 					// i.e. not a new line
 					$(element).parent().remove();
 					deleteItem(element);
 					return;
 				}
-				else if (element.data('itemid') !== '' && contentText !== '' &&  element.data('itemid') === ''){
-					var newItemName = contentText; 
-					createItem(element, newItemName, null);
-					event.stopImmediatePropagation();
-					return;
-				}
-				else if (element.data('itemid') === undefined || element.data('itemid') === ''){
-					return;
+
+				// When current item's data-parentid is different from its real parent in the DOM, update relationship
+				var possibleParentId = element.parent('li').parent('ul').parent('li').attr('data-itemid');
+				if (element.attr('data-parentid') != element.parent('li').parent('ul').parent('li').attr('data-itemid') && possibleParentId !== undefined){
+					setChildrenParent(element.attr('data-itemid'), possibleParentId);
 				}
 			}
+
 			
 			if (contentText == originalDetail){
 				return;
@@ -199,9 +201,9 @@ $(document).ready(function() {
 					if (treeElement.hasClass('.tree')){ return; }
 
 					var thisItem_li = element.parent('li'),
-						itemId = thisItem_li.data('itemid');
+						itemId = thisItem_li.attr('data-itemid');
 					var parentItem = thisItem_li.parent('ul').parent('li'),
-						parentId = parentItem.parent('ul').parent('li').data('itemid');
+						parentId = parentItem.parent('ul').parent('li').attr('data-itemid');
 					
 					// 1. Remove expander & parent's subtree if if the element is the only child
 					if (element.parent().siblings().length === 0){
@@ -230,30 +232,40 @@ $(document).ready(function() {
 					var prevItem = element.parent('li').prev('li');
 					if (prevItem.length === 0){ return; } 
 
-					var itemId = element.data("itemid");
-					var parentId = prevItem.data("itemid");
+					var itemId = element.attr('data-itemid');
+					var parentId = prevItem.attr('data-itemid');
 
 					// Expand the tree if prev item has children
 					if (prevItem.children('input[type=checkbox]').length){
 						expandBranch(prevItem.children('input[type=checkbox]'));
 					}
+
+					// Move itself
+					element.parent().appendTo(prevItem.children('ul.children'));
+					// The element will focusout right here (after appendTo)
+					// thus creating the object right here
 					
-					// Only insert ul place holder if prev sibling does not have any child
-					if (prevItem.children('ul.children').length === 0){
+					// Expand the tree
+					if (prevItem.children('label.expander').length === 0){
 						var toPrepend = '<input type="checkbox" data-itemid="' + parentId + '" id="c' + parentId + '"><label class="expander" for="c'+parentId+'"></label>';
 						$(toPrepend).prependTo(prevItem);
 					}
-					
-					// Move itself
-					element.parent().appendTo(prevItem.children('ul.children'));
-					// Expand the tree
 					element.parent().parent().siblings('input[type=checkbox]').prop('checked','true');
-					
+
+					if (element.text() !== ''){ // new, type in then tab
+						parentId = element.parent('li').parent('ul').parent('li').attr('data-itemid');
+					}
+
 					// Update relationship
-					if (element.data('itemid') !== undefined && element.data('itemid') !== ''){
+					// For newly created item: Right here data-itemid will be blank since the newly created item has not been updated by createItem() function yet due to delay of xhf response
+					if (element.attr('data-itemid') != undefined && element.attr('data-itemid') != ''){
+						console.log("setting children parent");
 						setChildrenParent(itemId, parentId);
 						loadDetail(element,false); // false = purge cache, get new info
+					} else { // new item being tabbed after typing
+
 					}
+
 					element.focus(); // Keep focus on the item after tab
 				}
 				else{
@@ -332,7 +344,7 @@ $(document).ready(function() {
 							} 
 							if (element.hasClass('tree_label')){
 								// 2. Create new item below it
-								var newItemHtml = "<li class=\"item\" data-itemid=\"\" id=\"\"><div class=\"tree_label item-name\" data-itemid=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
+								var newItemHtml = "<li class=\"item\" data-itemid=\"\" id=\"\"><i class=\"fa fa-bars mover\" aria-hidden=\"true\"></i><div class=\"tree_label item-name\" data-itemid=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
 								$(newItemHtml).insertAfter(element.parent());
 								var newlyCreatedItem = element.parent().next().children('div.tree_label');
 								newlyCreatedItem.focus();
@@ -347,15 +359,7 @@ $(document).ready(function() {
 		});
 	};
 
-	$('.item').on('focus','.item-name',function(e){
-		var element = $(this);
-		focusContentEditable(element);
-	});
 
-	$('.object-editor').on('focus','span[contenteditable=true]',function(e){
-		var element = $(this);
-		focusContentEditable(element);
-	});
 	
 	// BEGIN HELPER FUNCTIONS ==============================================
 	// Create item function
@@ -373,9 +377,10 @@ $(document).ready(function() {
     			if (json){
     				newItemId = json.id;
     				$(element).parent().attr('data-itemid',newItemId);
-    				$(element).attr('data-itemid',newItemId);
-    				$(element).attr('id','item_'+newItemId);
     				$(element).parent().attr('data-parentid', parent_id);
+    				$(element).attr('data-itemid',newItemId);
+    				$(element).attr('data-parentid',parent_id);
+    				$(element).attr('id','item_'+newItemId);
     			}
     		}
     	});
@@ -386,7 +391,7 @@ $(document).ready(function() {
     // ajax get details of the item and insert into object viewer
     var loadDetail = function(element, useCache=true) {
     	var data;
-    	var item_id = element.data('itemid');
+    	var item_id = element.attr('data-itemid');
     	if (item_id === undefined) {return;}
     	if (localCacheTree[item_id] && useCache){
 			loader.removeClass('enabled'); // Hide loader
@@ -445,12 +450,12 @@ $(document).ready(function() {
 	// post ajax update from this (innerhtml) text to server
 	var updateItem = function(element){
 		var data = {};
-		var itemId = $(element).data('itemid');
+		var itemId = $(element).attr('data-itemid');
 		// If there is an itemId, this is an item already created
 		// so update its information
 		if (itemId){
 			data.item_id = itemId;
-			data.detail = $(element).data('name');
+			data.detail = $(element).attr('data-name');
 			data.value = element.text();
 			// Send an ajax request to update the field
 			$.ajax({
@@ -475,7 +480,7 @@ $(document).ready(function() {
 	// post ajax request to server, server will handle deletion validation
 	var deleteItem = function(element){
 		var data = {};
-		var itemId = $(element).data('itemid');
+		var itemId = $(element).attr('data-itemid');
 		
 		// If there is an itemId, this is an item already created
 		// so update its information
@@ -504,6 +509,9 @@ $(document).ready(function() {
 				parent_id: parent_id,
 				item_id: child_id,
 			},
+			success: function(){
+				$('#item_'.child_id).attr('data-parentid',parent_id);
+			}
 		});
 	};
 
@@ -516,7 +524,7 @@ $(document).ready(function() {
 		}
 		toPrepend = $(element).siblings('ul.children');
 		if(toPrepend.is(':empty')){ // Only fill in if the branch has not been filled
-			var item_id = $(element).data('itemid');
+			var item_id = $(element).attr('data-itemid');
 			var data;
 
 			if (localCacheDetail[item_id]){
@@ -540,12 +548,13 @@ $(document).ready(function() {
 				        // Display HTML of children
 				        if(data!==undefined){
 				        	// @input: an input[type=checkbox] elemenet
-				        	var thisItemId = $(element).data('itemid');
+				        	var thisItemId = $(element).attr('data-itemid');
 				        	data.forEach(function(item){
-				        		children_html += "<li class=\"item\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"item_" + item.id + "\">";
-				        		children_html += (item.has_children)? "<input type=\"checkbox\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"c" + item.id + "\"><label class=\"expander\" for=\"c" + item.id + "\"></label>\
-										<div class=\"tree_label item-name\" for=\"c" + item.id +"\" data-itemid=\"" + item.id + "\" data-name=\"name\" data-parentid=\"" + thisItemId +  "\" contenteditable=\"true\">" + item.name + "</div>\
-										<ul class=\"children\"  id=\"sortable\"></ul>":"<div class=\"tree_label item-name\" data-itemid=\"" + item.id + "\" contenteditable=\"true\" data-name=\"name\">" + item.name + "</div>";
+				        		children_html += "<li class=\"item\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"item_" + item.id + "\"><i class=\"fa fa-bars mover\" aria-hidden=\"true\"></i>";
+				        		children_html += (item.has_children)? "<input type=\"checkbox\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"c" + item.id + "\"><label class=\"expander\" for=\"c" + item.id + "\"></label>":"";
+								children_html += 
+										"<div class=\"tree_label item-name\" data-itemid=\"" + item.id + "\" data-name=\"name\" data-parentid=\"" + thisItemId +  "\" contenteditable=\"true\">" + item.name + "</div>\
+										<ul class=\"children\"  id=\"sortable\"></ul>";
 				        		children_html+="</li>";
 					        });
 				        }

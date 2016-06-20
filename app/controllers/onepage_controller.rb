@@ -1,7 +1,7 @@
 class OnepageController < ApplicationController
 
 	def index
-		@itemsWithNoParent = Item.where(parent_id: nil)
+		@itemsWithNoParent = Item.where(parent_id: [nil, 0])
 	end
 
 	def getChildren

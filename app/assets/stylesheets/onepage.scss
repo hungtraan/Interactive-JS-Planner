@@ -48,16 +48,16 @@ $primary-color : #00b7f1;
     position: absolute;
     padding: 15px;
 
-	div[contenteditable]:not(.first-item-placeholder):hover:after {
-		font-family: FontAwesome;
-		font-weight: normal;
-		font-style: normal;
-		// display: inline-block;
-		// content: '  \f0c9';
-		color: #ccc;
-		cursor: move;
-		margin-left: 5px;
-	}
+	// div[contenteditable]:not(.first-item-placeholder):hover:after {
+	// 	font-family: FontAwesome;
+	// 	font-weight: normal;
+	// 	font-style: normal;
+	// 	// display: inline-block;
+	// 	// content: '  \f0c9';
+	// 	color: #ccc;
+	// 	cursor: move;
+	// 	margin-left: 5px;
+	// }
 
 	[contenteditable]:hover, [contenteditable]:focus {
 		background: #FFFFD3;
@@ -174,9 +174,7 @@ $primary-color : #00b7f1;
 			    padding: 0 0 1em 2em;
 			    list-style: none;
 			    label.expander {
-				  	width: 1em;
-				  	height: 1em;
-				    background: #000;
+				  	background: #000;
 				    color: #fff;
 				    position: relative;
 				    z-index: 100;
@@ -198,10 +196,19 @@ $primary-color : #00b7f1;
 					}
 				}
 				&:hover {
-					> .mover{
-					display: inline-block;
+					&.expanded {
+						> div.tree_label:after{
+							left: -2.65em;
+						}
+						> ul li:hover > div.tree_label:before{
+							left: -3.35em !important;
+						}
 					}
-					> .tree_label:before{
+					> .mover{
+						display: inline-block;
+						position: relative;
+					}
+					> i ~ .tree_label:before{
 						left: -3.65em;
 					}
 				}
