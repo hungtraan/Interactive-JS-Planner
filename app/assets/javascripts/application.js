@@ -28,24 +28,6 @@ localCacheDetail = {};
 $(document).ready(function() {
 	var loader = $('.loader');
 
-	// Change cursor on mouse hold to specify moveability
-	$('.tree_label').mousedown(function(e){
-		e.preventDefault();
-		$(this).css('cursor', 'move');
-	});
-	$('.tree_label').mouseup(function(e){ 
-		e.preventDefault();
-	   $(this).css('cursor', 'auto');
-	});
-
-	// $('[contenteditable=true]').each ( function(){
-	//     $(this)[0].onmousedown = function() {
-	//     	// $('#sortable').nestedSortable("destroy");
-
-	//         // this.focus();
-	//     };
-	// });
-
 	// $(this).toggleClass("textedit moveitem");
 	var firstLocationRemembered = 0;
 	var originalSerialized = '';
@@ -81,10 +63,10 @@ $(document).ready(function() {
 			serialized = $('#sortable').nestedSortable('serialize');
 			if (originalSerialized !== serialized){
 				// do stuff here to update ordering and relatioships of items
-				reordering(serialized);
+				reordering(serialized, originalSerialized);
+				firstLocationRemembered = 0;
+				originalSerialized = serialized;
 			}
-			firstLocationRemembered = 0;
-
 		},
 		revert: function(){
 			firstLocationRemembered = 1;
@@ -133,6 +115,27 @@ $(document).ready(function() {
 		focusContentEditable(element);
 	});
 
+	// Hover with mousedown on a li element over 1000ms, expand branch
+	$('.tree').on('mousedown', '.mover',function(e1){
+		var delay=1500, setTimeoutConst;
+		$('.tree').on('mouseover','li.item:not(#0)',function(event){
+			event.stopImmediatePropagation();
+			var li_element = $(this);
+			if (li_element.children('input[type=checkbox]').length === 0){
+				return;
+			}
+			setTimeoutConst = setTimeout(function(e){
+				li_element.children('input[type=checkbox]').prop('checked',true).change();
+			}, delay);
+		}).on('mouseleave','li.item', function(event){
+			clearTimeout(setTimeoutConst);
+		});
+	}).on('mouseup', function(){
+		console.log('upped');
+		$('.tree').unbind('mouseover');
+	});
+
+
 	// Live ajax save with HTML5 contenteditable
 	// $('span[contenteditable=true]').focus() would not work
 	// since it does not recognize newly inserted elements
@@ -154,7 +157,7 @@ $(document).ready(function() {
 					originalDetail = newItemName;
 
 					var newItemParentId = element.parent('li').parent('ul').parent('li').attr('data-itemid');
-					if (newItemParentId == 0){newItemParentId = null;}
+					if (newItemParentId === 0){newItemParentId = null;}
 					createItem(element, newItemName, newItemParentId);
 					return;
 				}
@@ -566,9 +569,10 @@ $(document).ready(function() {
 		}
 	};
 
-	var reordering = function(serialized){
-		var tree = [];
+	var reordering = function(serialized, originalSerialized){
+		var tree = [], originalTree = [];
 		var itemArr = serialized.split("&");
+		var itemArrOrig = originalSerialized.split("&");
 		// console.log(itemArr);
 		for (var itemIdx in itemArr){
 			var itemObject = {};
@@ -579,7 +583,19 @@ $(document).ready(function() {
 			itemObject.ordering = itemIdx;
 			tree.push(itemObject);
 		}
+
+		for (var itemIdx in itemArrOrig){
+			var itemObject = {};
+			var i = itemArr[itemIdx].split("=");
+			var numberRegex = /\d+|null/;
+			itemObject.item_id = i[0].match(numberRegex)[0];
+			itemObject.parent_id = i[1].match(numberRegex)[0];
+			itemObject.ordering = itemIdx;
+			originalTree.push(itemObject);
+		}
+
 		console.log(tree);
+		console.log(originalTree);
 		
 	 	//  if (prevItem.children('ul.children').length === 0){
 		// 	var toPrepend = '<input type="checkbox" data-itemid="' + parentId + '" id="c' + parentId + '"><label class="expander" for="c'+parentId+'"></label>';
