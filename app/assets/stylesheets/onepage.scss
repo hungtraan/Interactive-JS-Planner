@@ -200,8 +200,13 @@ $primary-color : #00b7f1;
 						> div.tree_label:after{
 							left: -2.65em;
 						}
-						> ul li:hover > div.tree_label:before{
-							left: -3.35em !important;
+						> ul li:hover > div.tree_label {
+							&:before{
+								left: -3.35em !important;
+							}
+							&:after{
+								left: -2.35em;
+							}
 						}
 					}
 					> .mover{

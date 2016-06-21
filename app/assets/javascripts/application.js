@@ -142,7 +142,8 @@ $(document).ready(function() {
 		element.focusout(function(event){
 			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
 			var contentText = element.text();
-			console.log('out', element);
+			// console.log('out', element);
+
 			// When focus out (move on to a new line, clicking out of editable area)
 			// If old content to new content --> update item
 			// If blank content to new content --> create item
@@ -259,7 +260,6 @@ $(document).ready(function() {
 					// Update relationship
 					// For newly created item: Right here data-itemid will be blank since the newly created item has not been updated by createItem() function yet due to delay of xhf response
 					if (element.attr('data-itemid') != undefined && element.attr('data-itemid') != ''){
-						console.log("setting children parent");
 						setChildrenParent(itemId, parentId);
 						loadDetail(element,false); // false = purge cache, get new info
 					} else { // new item being tabbed after typing
