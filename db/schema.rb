@@ -11,17 +11,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160609155912) do
+ActiveRecord::Schema.define(version: 20160621181953) do
 
   create_table "items", force: :cascade do |t|
     t.string   "name",        limit: 255
-    t.integer  "parent_name", limit: 4
+    t.string   "parent_name", limit: 255
     t.text     "description", limit: 65535
     t.integer  "by",          limit: 4
     t.string   "by_name",     limit: 255
     t.datetime "created_at",                null: false
     t.datetime "updated_at",                null: false
     t.integer  "parent_id",   limit: 4
+    t.float    "order_index", limit: 24
   end
 
 end

@@ -63,6 +63,8 @@ $(document).ready(function() {
 			serialized = $('#sortable').nestedSortable('serialize');
 			if (originalSerialized !== serialized){
 				// do stuff here to update ordering and relatioships of items
+				console.log(originalSerialized);
+				console.log(serialized);
 				reordering(serialized, originalSerialized);
 				firstLocationRemembered = 0;
 				originalSerialized = serialized;
@@ -131,7 +133,6 @@ $(document).ready(function() {
 			clearTimeout(setTimeoutConst);
 		});
 	}).on('mouseup', function(){
-		console.log('upped');
 		$('.tree').unbind('mouseover');
 	});
 
@@ -366,13 +367,22 @@ $(document).ready(function() {
 	
 	// BEGIN HELPER FUNCTIONS ==============================================
 	// Create item function
-    // @input: name, parent_id
+    // @input: name, parent_id, element div.tree_label
     var createItem = function(element, name, parent_id){
     	var newItemId = null;
+
+    	// get prev & next item's ordering
+    	var prevItem = element.parent('li').prev('li');
+    	var nextItem = element.parent('li').next('li');
+		var prevItemId = (prevItem.length === 0) ? null:prevItem.attr('data-itemid');
+    	var nextItemId = (nextItem.length === 0) ? null:nextItem.attr('data-itemid');
+
     	$.ajax({
     		data: {
     			item_name: name,
     			parent_id: parent_id, 
+    			prev_item_id: prevItemId,
+    			next_item_id: nextItemId,
     		},
     		url: "/create_item",
     		method: "POST",
@@ -569,39 +579,72 @@ $(document).ready(function() {
 		}
 	};
 
+	// Reordering, called from nestedSorting drag-n-drop
+	// @input: the 2 serialized visual trees (new & original)
+	// e.g. 
+	// --original: item[3]=0&item[127]=0&item[259]=0&item[354]=0
+	// --new:      item[3]=0&item[259]=0&item[127]=0&item[354]=0
 	var reordering = function(serialized, originalSerialized){
-		var tree = [], originalTree = [];
+		var tree = {}, originalTree = {};
 		var itemArr = serialized.split("&");
 		var itemArrOrig = originalSerialized.split("&");
-		// console.log(itemArr);
-		for (var itemIdx in itemArr){
-			var itemObject = {};
-			var i = itemArr[itemIdx].split("=");
-			var numberRegex = /\d+|null/;
-			itemObject.item_id = i[0].match(numberRegex)[0];
-			itemObject.parent_id = i[1].match(numberRegex)[0];
-			itemObject.ordering = itemIdx;
-			tree.push(itemObject);
-		}
-
+		
+		// Construct 2 tree objects containing item objects
+		var numberRegex = /\d+|null/;
 		for (var itemIdx in itemArrOrig){
 			var itemObject = {};
-			var i = itemArr[itemIdx].split("=");
-			var numberRegex = /\d+|null/;
+			var i = itemArrOrig[itemIdx].split("=");
+			
 			itemObject.item_id = i[0].match(numberRegex)[0];
 			itemObject.parent_id = i[1].match(numberRegex)[0];
 			itemObject.ordering = itemIdx;
-			originalTree.push(itemObject);
+			var item_id = itemObject.item_id;
+			originalTree[item_id] = itemObject;
 		}
 
-		console.log(tree);
+		for (var new_itemIdx in itemArr){
+			var new_itemObject = {};
+			var new_i = itemArr[new_itemIdx].split("=");
+			new_itemObject.item_id = new_i[0].match(numberRegex)[0];
+			new_itemObject.parent_id = new_i[1].match(numberRegex)[0];
+			new_itemObject.ordering = new_itemIdx;
+			var new_item_id = new_itemObject.item_id;
+			tree[new_item_id] = new_itemObject;
+		}
+
 		console.log(originalTree);
+		console.log(tree);
 		
-	 	//  if (prevItem.children('ul.children').length === 0){
-		// 	var toPrepend = '<input type="checkbox" data-itemid="' + parentId + '" id="c' + parentId + '"><label class="expander" for="c'+parentId+'"></label>';
-		// 	$(toPrepend).prependTo(prevItem);
-		// }
-	}
+		// Find the items that have been changed and update them
+		for (var item in tree){ // item here is item id
+			if (originalTree.hasOwnProperty(item)){ //ignore items not in original tree that was unexpanded (difference in item existence is due to branch expansion on move)
+				var oldItem = originalTree[item];
+				var newItem = tree[item];
+				
+				// Update children parent relationship
+				if (newItem.parent_id !== oldItem.parent_id){
+					console.log(newItem);
+					setChildrenParent(newItem.item_id, newItem.parent_id);
+				}
+				if (newItem.ordering !== oldItem.ordering){
+					// change ordering at the new parent (if changed)
+				}
+			}
+		}
+		
+	};
+
+	// Update order index of items
+    // @input: element 
+    var updateOrderIndex = function(element, item_id, current_order_index, new_order_index){
+    	// get prev & next item's ordering
+    	var prevItem = element.parent('li').prev('li');
+    	var nextItem = element.parent('li').next('li');
+		var prevItemId = (prevItem.length === 0) ? null:prevItem.attr('data-itemid');
+    	var nextItemId = (nextItem.length === 0) ? null:nextItem.attr('data-itemid');
+
+    };
+
 	// END HELPER FUNCTIONS ==============================================
 });
 

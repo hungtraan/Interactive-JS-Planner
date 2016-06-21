@@ -1,4 +1,6 @@
 class Item < ActiveRecord::Base
+	# If want to create separate child-parent relationship table:
+	# Refer to: http://cobwwweb.com/a-has-many-relationship-within-a-single-model-in-rails
 	has_many :children, :class_name => "Item", :foreign_key => "parent_id"
 	belongs_to :parent, :class_name => "Item"
 
@@ -42,13 +44,6 @@ class Item < ActiveRecord::Base
 		array.each do |children_id|
 			Item.find(children_id).setParent(self.id)
 		end
-	end
-	
-	# Update parent item of the target item
-	def setParent(pid)
-		self.parent_id=pid
-		self.parent_name = Item.find(pid).name
-		self.save
 	end
 
 	# Update parent item of the target item

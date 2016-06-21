@@ -53,11 +53,20 @@ class OnepageController < ApplicationController
 
 	def createItem
 		itemName = params[:item_name]
+
+		# Calculate order index, only within its parent
+		# prevId and nextId is passed from js, so it's already inside the parent
+		prevId = params[:prev_item_id]
+		nextId = params[:next_item_id]
+		prevItem = (Item.exists?(prevId) && prevId != '')? Item.find(params[:prev_item_id]): nil
+		nextItem = (Item.exists?(nextId) && nextId != '')? Item.find(params[:next_item_id]): nil
+		orderIndex = self.calculateOrder(prevItem, nextItem)
+
 		if params[:parent_id] != ''
 			parentId = params[:parent_id]
 			if Item.exists?(parentId) && parentId
 				parentName = Item.find(parentId).name
-				newItem = Item.new(:name => itemName, :parent_id => parentId, :parent_name => parentName)
+				newItem = Item.new(:name => itemName, :parent_id => parentId, :parent_name => parentName, :order_index => orderIndex)
 				newItem.save
 			end
 		else
@@ -70,6 +79,28 @@ class OnepageController < ApplicationController
           }
         end
 		# head 200, content_type: "text/html"
+	end
+
+	# @input: 2 item objects, could be nil
+	def calculateOrder(prevItem, nextItem)
+		prevOrderIndex = (prevItem == nil)? nil : prevItem.order_index
+		nextOrderIndex = (nextItem == nil)? nil : nextItem.order_index
+		
+		step = 2**8 # ==> it takes at least 9 consecutive worst-case moves to get to 1
+		
+		if prevOrderIndex == nil && nextOrderIndex == nil # only child of parent item
+			return step
+		elsif prevOrderIndex == nil # insert into first child of parent
+			# nextOrderIndex != 0
+			return nextOrderIndex/2		
+		elsif nextOrderIndex == nil # last child
+			return prevOrderIndex + step
+		else # both order_index are available
+			return (prevOrderIndex + nextOrderIndex)/2
+			# Note: order_index is float, so we have to update this ordering very infrequently
+			# float is 32-bit, so for now the prototype will not take care 
+			# of reindexing in case of collision 
+		end
 	end
 
 	def deleteItem
