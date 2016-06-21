@@ -34,18 +34,16 @@ $(document).ready(function() {
 	var serialized = '';
 	$('#sortable').nestedSortable({
         handle: 'i.mover',
-        helper:	'clone',
+        // helper:	'clone',
         items: 'li',
         toleranceElement: '> div',
-        opacity: .6,
+        // opacity: .6,
         listType: 'ul',
         forcePlaceholderSize: true,
         placeholder: 'placeholder',
-        isTree: true,
-		startCollapsed: false,
+        // isTree: true,
 		protectRoot: true,
 		rootID: 0,
-		revert: 250,
 		tabSize: 25,
 		tolerance: 'pointer',
 		// change: function(){
@@ -63,11 +61,20 @@ $(document).ready(function() {
 			serialized = $('#sortable').nestedSortable('serialize');
 			if (originalSerialized !== serialized){
 				// do stuff here to update ordering and relatioships of items
-				console.log(originalSerialized);
-				console.log(serialized);
-				reordering(serialized, originalSerialized);
+				// console.log(originalSerialized);
+				// console.log(serialized);
+				// reordering(serialized, originalSerialized);
 				firstLocationRemembered = 0;
 				originalSerialized = serialized;
+				if (itemToMove.offset() !== oldPos){
+					// console.log("Moved ", itemToMove.attr('data-itemid'));
+					reorder(itemToMove);
+					var newParentId = itemToMove.parent('ul').parent('li').attr('data-itemid');
+					if (newParentId != oldParentId){
+						// update children parent
+						setChildrenParent(itemToMove.attr('data-itemid'), newParentId);
+					}
+				}
 			}
 		},
 		revert: function(){
@@ -118,7 +125,9 @@ $(document).ready(function() {
 	});
 
 	// Hover with mousedown on a li element over 1000ms, expand branch
-	$('.tree').on('mousedown', '.mover',function(e1){
+	var itemToMove;
+	var oldPos, oldParentId;
+	$('.tree').on('mousedown', '.mover',function(e){
 		var delay=1500, setTimeoutConst;
 		$('.tree').on('mouseover','li.item:not(#0)',function(event){
 			event.stopImmediatePropagation();
@@ -132,7 +141,10 @@ $(document).ready(function() {
 		}).on('mouseleave','li.item', function(event){
 			clearTimeout(setTimeoutConst);
 		});
-	}).on('mouseup', function(){
+		itemToMove = $(this).parent('li');
+		oldPos = itemToMove.offset();
+		oldParentId = itemToMove.parent('ul').parent('li').attr('data-itemid');
+	}).on('mouseup', function(e){
 		$('.tree').unbind('mouseover');
 	});
 
@@ -588,16 +600,38 @@ $(document).ready(function() {
 		var tree = {}, originalTree = {};
 		var itemArr = serialized.split("&");
 		var itemArrOrig = originalSerialized.split("&");
-		
-		// Construct 2 tree objects containing item objects
+		var changedParentItem = [];
 		var numberRegex = /\d+|null/;
+		// Find those that changed parent
+		for (var item in itemArr){
+			var itemStr = itemArr[item];
+			if (itemArrOrig.indexOf(itemStr) === -1){ // item in new array but not in original array
+				// could be either cases:
+				// item expanded, or item moved
+				var itemObject = {};
+				var itemData = itemArrOrig[item].split("=");
+				itemObject.item_id = itemData[0].match(numberRegex)[0];
+				itemObject.parent_id = itemData[1].match(numberRegex)[0];
+				changedParentItem.push(itemObject);
+			}
+		}
+		// console.log(itemArr);
+		// console.log(changedParentItem);
+		for (var item in changedParentItem){
+			var itemObject = changedParentItem[item];
+			var idx = itemArrOrig.indexOf(itemObject);
+			itemArr.splice(idx,1);
+		}
+		// console.log(itemArr);
+		return;
+		// Construct 2 tree objects containing item objects
 		for (var itemIdx in itemArrOrig){
 			var itemObject = {};
 			var i = itemArrOrig[itemIdx].split("=");
 			
 			itemObject.item_id = i[0].match(numberRegex)[0];
 			itemObject.parent_id = i[1].match(numberRegex)[0];
-			itemObject.ordering = itemIdx;
+			// itemObject.ordering = itemIdx;
 			var item_id = itemObject.item_id;
 			originalTree[item_id] = itemObject;
 		}
@@ -607,13 +641,13 @@ $(document).ready(function() {
 			var new_i = itemArr[new_itemIdx].split("=");
 			new_itemObject.item_id = new_i[0].match(numberRegex)[0];
 			new_itemObject.parent_id = new_i[1].match(numberRegex)[0];
-			new_itemObject.ordering = new_itemIdx;
+			// new_itemObject.ordering = new_itemIdx;
 			var new_item_id = new_itemObject.item_id;
 			tree[new_item_id] = new_itemObject;
 		}
 
-		console.log(originalTree);
-		console.log(tree);
+		// console.log(originalTree);
+		// console.log(tree);
 		
 		// Find the items that have been changed and update them
 		for (var item in tree){ // item here is item id
@@ -623,28 +657,44 @@ $(document).ready(function() {
 				
 				// Update children parent relationship
 				if (newItem.parent_id !== oldItem.parent_id){
-					console.log(newItem);
 					setChildrenParent(newItem.item_id, newItem.parent_id);
 				}
-				if (newItem.ordering !== oldItem.ordering){
-					// change ordering at the new parent (if changed)
-				}
+				// if (newItem.ordering !== oldItem.ordering){
+				// 	// change ordering at the new parent (if changed)
+				// }
 			}
 		}
 		
 	};
 
 	// Update order index of items
-    // @input: element 
-    var updateOrderIndex = function(element, item_id, current_order_index, new_order_index){
+    // @input: li ement
+	var reorder = function(element){
     	// get prev & next item's ordering
-    	var prevItem = element.parent('li').prev('li');
-    	var nextItem = element.parent('li').next('li');
+		var item_id = element.attr('data-itemid');
+		var prevItem = element.prev('li');
+		var nextItem = element.next('li');
+		var parentItem = element.parent('ul').parent('li');
+
 		var prevItemId = (prevItem.length === 0) ? null:prevItem.attr('data-itemid');
     	var nextItemId = (nextItem.length === 0) ? null:nextItem.attr('data-itemid');
 
-    };
+    	$.ajax({
+			url: '/update_order_index',
+			method: "POST",
+			data: {
+				parent_id: parent_id,
+				item_id: child_id,
+				next_item_id: nextItemId,
+				prev_item_id: prevItemId,
+			},
+			success: function(){
+				console.log("Yay");
+			}
+    	});
+	};
 
+   
 	// END HELPER FUNCTIONS ==============================================
 });
 

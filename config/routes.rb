@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   match 'create_item' => 'onepage#createItem', via: :post
   match 'delete_item' => 'onepage#deleteItem', via: :post
   match 'update_parent_children' => 'onepage#updateParentChildren', via: :post
+  match 'update_order_index' => 'onepage#updateOrderIndex', via: :post
   # You can have the root of your site routed with "root"
   # root 'welcome#index'
 

@@ -103,6 +103,18 @@ class OnepageController < ApplicationController
 		end
 	end
 
+	def updateOrderIndex
+		# Calculate order index, only within its parent
+		# prevId and nextId is passed from js, so it's already inside the parent
+		prevId = params[:prev_item_id]
+		nextId = params[:next_item_id]
+		prevItem = (Item.exists?(prevId) && prevId != '')? Item.find(params[:prev_item_id]): nil
+		nextItem = (Item.exists?(nextId) && nextId != '')? Item.find(params[:next_item_id]): nil
+		orderIndex = self.calculateOrder(prevItem, nextItem)
+
+		# TO-DO: Actually updating order index of items
+	end
+
 	def deleteItem
 		itemId = params[:item_id]
 		if itemId != nil || itemId != ''
