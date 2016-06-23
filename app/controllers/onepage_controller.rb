@@ -1,7 +1,7 @@
 class OnepageController < ApplicationController
 
 	def index
-		@itemsWithNoParent = Item.where(parent_id: [nil, 0])
+		@itemsWithNoParent = Item.where(parent_id: [nil, 0]).order(order_index: :asc)
 	end
 
 	def getChildren
@@ -70,7 +70,7 @@ class OnepageController < ApplicationController
 				newItem.save
 			end
 		else
-			newItem = Item.new(:name => itemName)
+			newItem = Item.new(:name => itemName, :order_index => orderIndex)
 			newItem.save
 		end
 		respond_to do |format|
@@ -86,7 +86,7 @@ class OnepageController < ApplicationController
 		prevOrderIndex = (prevItem == nil)? nil : prevItem.order_index
 		nextOrderIndex = (nextItem == nil)? nil : nextItem.order_index
 		
-		step = 2**8 # ==> it takes at least 9 consecutive worst-case moves to get to 1
+		step = 2**16 # ==> it takes at least 17 consecutive worst-case moves to get to 1
 		
 		if prevOrderIndex == nil && nextOrderIndex == nil # only child of parent item
 			return step
@@ -103,16 +103,21 @@ class OnepageController < ApplicationController
 		end
 	end
 
+	# Calculate order index, only within its parent
 	def updateOrderIndex
-		# Calculate order index, only within its parent
 		# prevId and nextId is passed from js, so it's already inside the parent
+		itemId = params[:item_id]
 		prevId = params[:prev_item_id]
 		nextId = params[:next_item_id]
-		prevItem = (Item.exists?(prevId) && prevId != '')? Item.find(params[:prev_item_id]): nil
-		nextItem = (Item.exists?(nextId) && nextId != '')? Item.find(params[:next_item_id]): nil
+		prevItem = (prevId != '' && Item.exists?(prevId))? Item.find(params[:prev_item_id]): nil
+		nextItem = (nextId != '' && Item.exists?(nextId))? Item.find(params[:next_item_id]): nil
 		orderIndex = self.calculateOrder(prevItem, nextItem)
 
 		# TO-DO: Actually updating order index of items
+		item = Item.find(itemId)
+		item.order_index = orderIndex
+		item.save
+		head 200, content_type: "text/html"
 	end
 
 	def deleteItem

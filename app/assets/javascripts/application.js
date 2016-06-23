@@ -67,11 +67,12 @@ $(document).ready(function() {
 				firstLocationRemembered = 0;
 				originalSerialized = serialized;
 				if (itemToMove.offset() !== oldPos){
-					// console.log("Moved ", itemToMove.attr('data-itemid'));
+					// 1. Reorder the items within its parent
+					console.log(itemToMove);
 					reorder(itemToMove);
 					var newParentId = itemToMove.parent('ul').parent('li').attr('data-itemid');
 					if (newParentId != oldParentId){
-						// update children parent
+						// 2. Update children parent relationship
 						setChildrenParent(itemToMove.attr('data-itemid'), newParentId);
 					}
 				}
@@ -124,7 +125,7 @@ $(document).ready(function() {
 		focusContentEditable(element);
 	});
 
-	// Hover with mousedown on a li element over 1000ms, expand branch
+	// Hover with mousedown on a li element over 1500ms, expand branch
 	var itemToMove;
 	var oldPos, oldParentId;
 	$('.tree').on('mousedown', '.mover',function(e){
@@ -388,7 +389,7 @@ $(document).ready(function() {
     	var nextItem = element.parent('li').next('li');
 		var prevItemId = (prevItem.length === 0) ? null:prevItem.attr('data-itemid');
     	var nextItemId = (nextItem.length === 0) ? null:nextItem.attr('data-itemid');
-
+    	if (parent_id === '0'){parent_id=''};
     	$.ajax({
     		data: {
     			item_name: name,
@@ -527,6 +528,7 @@ $(document).ready(function() {
 	// Set child-parent relationship
 	// @input item id of child and parent (one-one)
 	var setChildrenParent = function(child_id, parent_id){
+		if (child_id===''){return;}
 		$.ajax({
 			url: '/update_parent_children',
 			method: "POST",
@@ -671,11 +673,10 @@ $(document).ready(function() {
     // @input: li ement
 	var reorder = function(element){
     	// get prev & next item's ordering
-		var item_id = element.attr('data-itemid');
+		var itemId = element.attr('data-itemid');
 		var prevItem = element.prev('li');
 		var nextItem = element.next('li');
-		var parentItem = element.parent('ul').parent('li');
-
+		
 		var prevItemId = (prevItem.length === 0) ? null:prevItem.attr('data-itemid');
     	var nextItemId = (nextItem.length === 0) ? null:nextItem.attr('data-itemid');
 
@@ -683,8 +684,7 @@ $(document).ready(function() {
 			url: '/update_order_index',
 			method: "POST",
 			data: {
-				parent_id: parent_id,
-				item_id: child_id,
+				item_id: itemId,
 				next_item_id: nextItemId,
 				prev_item_id: prevItemId,
 			},

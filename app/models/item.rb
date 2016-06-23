@@ -24,7 +24,7 @@ class Item < ActiveRecord::Base
 
 	# Returns all child items
 	def getChildren
-		childrenArr = self.children
+		childrenArr = self.children.order(order_index: :asc)
 		children = []
 		childrenArr.each do |child|
 			# children[child.id] = {
