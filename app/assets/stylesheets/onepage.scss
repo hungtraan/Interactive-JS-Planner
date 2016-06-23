@@ -1,6 +1,11 @@
 // Place all the styles related to the onepage controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+/*
+ *= require jquery-ui/core
+ *= require jquery-ui/theme
+ *= require jquery-ui/dialog
+ */
 
 @import "compass/css3";
 @import "font-awesome";
@@ -213,7 +218,7 @@ $primary-color : #00b7f1;
 						display: inline-block;
 						position: relative;
 					}
-					> i ~ .tree_label:before{
+					> .tree_label:before{
 						left: -3.65em;
 					}
 				}

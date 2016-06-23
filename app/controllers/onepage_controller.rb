@@ -92,7 +92,7 @@ class OnepageController < ApplicationController
 			return step
 		elsif prevOrderIndex == nil # insert into first child of parent
 			# nextOrderIndex != 0
-			return nextOrderIndex/2		
+			return nextOrderIndex/2
 		elsif nextOrderIndex == nil # last child
 			return prevOrderIndex + step
 		else # both order_index are available

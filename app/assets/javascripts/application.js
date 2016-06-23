@@ -14,6 +14,7 @@
 //= require jquery
 //= require jquery_ujs
 //= require jquery-ui/sortable
+//= require jquery-ui/dialog
 //= require turbolinks
 //= require bootstrap-sprockets
 //= require_tree .
@@ -32,58 +33,67 @@ $(document).ready(function() {
 	var firstLocationRemembered = 0;
 	var originalSerialized = '';
 	var serialized = '';
+	
 	$('#sortable').nestedSortable({
         handle: 'i.mover',
-        // helper:	'clone',
+        helper:	'clone',
         items: 'li',
         toleranceElement: '> div',
         // opacity: .6,
         listType: 'ul',
         forcePlaceholderSize: true,
         placeholder: 'placeholder',
-        // isTree: true,
+        isTree: true, // to expand on hover
+        expandOnHover: 1500,
 		protectRoot: true,
 		rootID: 0,
 		tabSize: 25,
 		tolerance: 'pointer',
-		// change: function(){
-		// 	// serialized = $('#sortable').nestedSortable('serialize');
-		// 	// // var toArray = $('#sortable').nestedSortable('toArray', {startDepthCount: 0});
-		// 	// console.log(serialized);
-		// },
-		sort: function(){
-			if(!firstLocationRemembered){
-				originalSerialized = $('#sortable').nestedSortable('serialize');
-				firstLocationRemembered = 1;
-			}
-		},
 		relocate: function(){
-			serialized = $('#sortable').nestedSortable('serialize');
-			if (originalSerialized !== serialized){
-				// do stuff here to update ordering and relatioships of items
-				// console.log(originalSerialized);
-				// console.log(serialized);
-				// reordering(serialized, originalSerialized);
-				firstLocationRemembered = 0;
-				originalSerialized = serialized;
-				if (itemToMove.offset() !== oldPos){
-					// 1. Reorder the items within its parent
-					console.log(itemToMove);
-					reorder(itemToMove);
-					var newParentId = itemToMove.parent('ul').parent('li').attr('data-itemid');
-					if (newParentId != oldParentId){
-						// 2. Update children parent relationship
-						setChildrenParent(itemToMove.attr('data-itemid'), newParentId);
+			// serialized = $('#sortable').nestedSortable('serialize');
+			// console.log(serialized);
+			if (itemToMove.offset() !== oldPos){
+				// 1. Reorder the items within its parent
+				reorder(itemToMove);
+				var newParentId = itemToMove.parent('ul').parent('li').attr('data-itemid');
+				var possibleParent = itemToMove.parent('ul').parent('li');
+				if (newParentId != oldParentId){
+					// 2. Update children parent relationship
+					setChildrenParent(itemToMove.attr('data-itemid'), newParentId);
+					if (possibleParent.children('label.expander').length === 0){
+						var toPrepend = '<input type="checkbox" data-itemid="' + newParentId + '" id="c' + newParentId + '"><label class="expander" for="c'+newParentId+'"></label>';
+						$(toPrepend).prependTo(possibleParent);
+						possibleParent.children('input[type=checkbox]').prop('checked','true');
 					}
 				}
 			}
 		},
-		revert: function(){
-			firstLocationRemembered = 1;
-		}
+		// revert: function(){
+			
+		// }
 	});
+
+	
 	$('[contenteditable=true]').unbind(); // to make contenteditable work again with nestedsortable
 	
+	$( "#dialog-confirm" ).dialog({
+		resizable: false,
+		autoOpen: false,
+		modal: true,
+		buttons: {
+			"Delete": function() {
+				$( this ).dialog( "close" );
+				confirmDelete();
+			},
+			Cancel: function() {
+			  $( this ).dialog( "close" );
+			}
+		}
+	});
+
+	var confirmDelete = function(){ //only placeholder to be redefined later 
+	};
+
 	// Highlight and Load detail when clicking on an item in tree
 	$('.tree').on('click','.tree_label.item-name', function(event){
 		var editor = $('.object-editor');
@@ -131,7 +141,6 @@ $(document).ready(function() {
 	$('.tree').on('mousedown', '.mover',function(e){
 		var delay=1500, setTimeoutConst;
 		$('.tree').on('mouseover','li.item:not(#0)',function(event){
-			event.stopImmediatePropagation();
 			var li_element = $(this);
 			if (li_element.children('input[type=checkbox]').length === 0){
 				return;
@@ -139,12 +148,14 @@ $(document).ready(function() {
 			setTimeoutConst = setTimeout(function(e){
 				li_element.children('input[type=checkbox]').prop('checked',true).change();
 			}, delay);
+			event.stopImmediatePropagation();
 		}).on('mouseleave','li.item', function(event){
 			clearTimeout(setTimeoutConst);
 		});
 		itemToMove = $(this).parent('li');
 		oldPos = itemToMove.offset();
 		oldParentId = itemToMove.parent('ul').parent('li').attr('data-itemid');
+		
 	}).on('mouseup', function(e){
 		$('.tree').unbind('mouseover');
 	});
@@ -178,8 +189,18 @@ $(document).ready(function() {
 				else if ((element.attr('data-itemid') !== undefined && element.attr('data-itemid') !== '') && (contentText === '' || contentText === null)){ 
 					// Remove if content is blank, but only for those with itemid
 					// i.e. not a new line
-					$(element).parent().remove();
-					deleteItem(element);
+					
+					if (element.siblings('label.expander').length !== 0){
+						confirmDelete = function(){
+							$(element).parent().remove();
+							deleteItem(element);
+						};
+						$( "#dialog-confirm" ).dialog("open");
+					}
+					else {
+						$(element).parent().remove();
+						deleteItem(element);
+					}
 					return;
 				}
 
@@ -361,7 +382,7 @@ $(document).ready(function() {
 							} 
 							if (element.hasClass('tree_label')){
 								// 2. Create new item below it
-								var newItemHtml = "<li class=\"item\" data-itemid=\"\" id=\"\"><i class=\"fa fa-bars mover\" aria-hidden=\"true\"></i><div class=\"tree_label item-name\" data-itemid=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
+								var newItemHtml = "<li class=\"item\" data-itemid=\"\" id=\"\"><i class=\"fa fa-bars mover ui-sortable-handle\" aria-hidden=\"true\"></i><div class=\"tree_label item-name\" data-itemid=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
 								$(newItemHtml).insertAfter(element.parent());
 								var newlyCreatedItem = element.parent().next().children('div.tree_label');
 								newlyCreatedItem.focus();
@@ -593,82 +614,6 @@ $(document).ready(function() {
 		}
 	};
 
-	// Reordering, called from nestedSorting drag-n-drop
-	// @input: the 2 serialized visual trees (new & original)
-	// e.g. 
-	// --original: item[3]=0&item[127]=0&item[259]=0&item[354]=0
-	// --new:      item[3]=0&item[259]=0&item[127]=0&item[354]=0
-	var reordering = function(serialized, originalSerialized){
-		var tree = {}, originalTree = {};
-		var itemArr = serialized.split("&");
-		var itemArrOrig = originalSerialized.split("&");
-		var changedParentItem = [];
-		var numberRegex = /\d+|null/;
-		// Find those that changed parent
-		for (var item in itemArr){
-			var itemStr = itemArr[item];
-			if (itemArrOrig.indexOf(itemStr) === -1){ // item in new array but not in original array
-				// could be either cases:
-				// item expanded, or item moved
-				var itemObject = {};
-				var itemData = itemArrOrig[item].split("=");
-				itemObject.item_id = itemData[0].match(numberRegex)[0];
-				itemObject.parent_id = itemData[1].match(numberRegex)[0];
-				changedParentItem.push(itemObject);
-			}
-		}
-		// console.log(itemArr);
-		// console.log(changedParentItem);
-		for (var item in changedParentItem){
-			var itemObject = changedParentItem[item];
-			var idx = itemArrOrig.indexOf(itemObject);
-			itemArr.splice(idx,1);
-		}
-		// console.log(itemArr);
-		return;
-		// Construct 2 tree objects containing item objects
-		for (var itemIdx in itemArrOrig){
-			var itemObject = {};
-			var i = itemArrOrig[itemIdx].split("=");
-			
-			itemObject.item_id = i[0].match(numberRegex)[0];
-			itemObject.parent_id = i[1].match(numberRegex)[0];
-			// itemObject.ordering = itemIdx;
-			var item_id = itemObject.item_id;
-			originalTree[item_id] = itemObject;
-		}
-
-		for (var new_itemIdx in itemArr){
-			var new_itemObject = {};
-			var new_i = itemArr[new_itemIdx].split("=");
-			new_itemObject.item_id = new_i[0].match(numberRegex)[0];
-			new_itemObject.parent_id = new_i[1].match(numberRegex)[0];
-			// new_itemObject.ordering = new_itemIdx;
-			var new_item_id = new_itemObject.item_id;
-			tree[new_item_id] = new_itemObject;
-		}
-
-		// console.log(originalTree);
-		// console.log(tree);
-		
-		// Find the items that have been changed and update them
-		for (var item in tree){ // item here is item id
-			if (originalTree.hasOwnProperty(item)){ //ignore items not in original tree that was unexpanded (difference in item existence is due to branch expansion on move)
-				var oldItem = originalTree[item];
-				var newItem = tree[item];
-				
-				// Update children parent relationship
-				if (newItem.parent_id !== oldItem.parent_id){
-					setChildrenParent(newItem.item_id, newItem.parent_id);
-				}
-				// if (newItem.ordering !== oldItem.ordering){
-				// 	// change ordering at the new parent (if changed)
-				// }
-			}
-		}
-		
-	};
-
 	// Update order index of items
     // @input: li ement
 	var reorder = function(element){
@@ -688,9 +633,9 @@ $(document).ready(function() {
 				next_item_id: nextItemId,
 				prev_item_id: prevItemId,
 			},
-			success: function(){
-				console.log("Yay");
-			}
+			// success: function(){
+			// 	console.log("Yay");
+			// }
     	});
 	};
 
