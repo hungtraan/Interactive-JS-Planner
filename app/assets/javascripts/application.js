@@ -236,8 +236,8 @@ $(document).ready(function() {
 					event.preventDefault();
 					
 					// Exception: No parent possible
-					var treeElement = element.parent().parent();
-					if (treeElement.hasClass('.tree')){ return; }
+					var treeElement = element.parent('li').parent('ul').parent('li');
+					if (treeElement.hasClass('root')){ return; }
 
 					var thisItem_li = element.parent('li'),
 						itemId = thisItem_li.attr('data-itemid');
@@ -248,7 +248,6 @@ $(document).ready(function() {
 					if (element.parent().siblings().length === 0){
 						var toRemove = thisItem_li.parent('ul').siblings('input, label');
 						toRemove.remove();
-						thisItem_li.parent('ul').remove();
 					}
 
 					// 2. Move after its parent
@@ -278,7 +277,6 @@ $(document).ready(function() {
 					if (prevItem.children('input[type=checkbox]').length){
 						expandBranch(prevItem.children('input[type=checkbox]'));
 					}
-
 					// Move itself
 					element.parent().appendTo(prevItem.children('ul.children'));
 					// The element will focusout right here (after appendTo)
@@ -291,6 +289,7 @@ $(document).ready(function() {
 					}
 					element.parent().parent().siblings('input[type=checkbox]').prop('checked','true');
 
+					
 					if (element.text() !== ''){ // new, type in then tab
 						parentId = element.parent('li').parent('ul').parent('li').attr('data-itemid');
 					}
@@ -595,7 +594,7 @@ $(document).ready(function() {
 
 				        // Display HTML of children
 				        if(data!==undefined){
-				        	// @input: an input[type=checkbox] elemenet
+				        	// @input: an input[type=checkbox] element
 				        	var thisItemId = $(element).attr('data-itemid');
 				        	data.forEach(function(item){
 				        		children_html += "<li class=\"item\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"item_" + item.id + "\"><i class=\"fa fa-bars mover\" aria-hidden=\"true\"></i>";
