@@ -86,7 +86,8 @@ $(document).ready(function() {
 				confirmDelete();
 			},
 			Cancel: function() {
-			  $( this ).dialog( "close" );
+				document.execCommand('undo');
+				$( this ).dialog( "close" );
 			}
 		}
 	});
