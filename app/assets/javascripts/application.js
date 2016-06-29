@@ -332,11 +332,10 @@ $(document).ready(function() {
 				        case 38: // Up
 				        	event.preventDefault();
 				        	var prevItem = element.parent().prev().children('div.tree_label');
-				        	
 				        	// Move into expanded subtree of previous item
 				        	if (prevItem.hasClass('expanded')){
-				        		prevItem = prevItem.parent().find('ul.children > li.item:last-child > div.tree_label');
-				        		prevItem = prevItem;
+				        		prevItem = prevItem.parent().find('ul.children > li.item:last-child > div.tree_label:visible');
+				        		// :visible prevent going to loaded but collapsed leaf item
 				        	}
 							if (prevItem.length){ // prevent el.blur if at end of list
 								prevItem[prevItem.length-1].focus();
