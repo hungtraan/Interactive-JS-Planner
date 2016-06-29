@@ -87,13 +87,11 @@ $primary-color : #00b7f1;
 			float: left;
 			text-decoration: none; 
 			text-align: center;
-			padding: 10px 0 10px 25px;
+			padding: 10px 10px 10px 15px;
 			position: relative; 
 			display: block;
-			float: left;
 			
 			a{
-				text-decoration: underline;
 				&:after{
 					content: " "; 
 					display: block; 
@@ -113,7 +111,7 @@ $primary-color : #00b7f1;
 				    top: 32%;
 				    position: absolute;
 				    margin-left: 1px;
-				    left: 82%;
+				    left: 50%;
 				    z-index: 1;
 				}
 			}	

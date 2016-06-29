@@ -213,11 +213,9 @@ $(document).ready(function() {
 			}
 
 			
-			if (contentText == originalDetail){
-				return;
-			}
-			else {
+			if (contentText !== originalDetail){
 				originalDetail = contentText;
+				console.log("hey");
 				updateItem(element);
 				loadDetail(element, false);
 			}
@@ -349,6 +347,7 @@ $(document).ready(function() {
 
 				        case 40: // Down
 				        	var nextItem;
+				        	console.log("Listening to: ", element);
 				        	if (element.hasClass('expanded')){ // support traversing parent -> children
 				        		nextItem = element.parent().find('ul > li.item:first-child > div.tree_label');
 				        	} else { // same-level traversing
@@ -358,9 +357,19 @@ $(document).ready(function() {
 								event.preventDefault();
 								nextItem[0].focus();
 							} 
-							else if (element.parent('li').parent('ul').parent('li').siblings('li')){ // if its parent has more sibling to go to
-								nextItem = element.parent('li').parent('ul').parent('li').next().children('div.tree_label');
-								nextItem.focus();
+							else{ // if its parent has more sibling to go to
+								var parentSibling = element.parent('li').parent('ul').parent('li').next('li');
+								if (parentSibling.length === 0){
+									var runner = element.parent('li'); // set runner = li to go outward
+									while (parentSibling.length === 0 && !(runner.hasClass('root')) ){
+										runner = runner.parent('ul').parent('li');
+										parentSibling = runner.parent('ul').parent('li').next('li');
+									}
+								}
+								if (parentSibling.length){
+									nextItem = parentSibling.children('div.tree_label');
+									nextItem.focus();
+								}
 							}
 				        	break;
 
