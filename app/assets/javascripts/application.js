@@ -592,7 +592,7 @@ $(document).ready(function() {
 			$(element).parent().append('<ul class="children"></ul>')
 		}
 		toPrepend = $(element).siblings('ul.children');
-		if(toPrepend.is(':empty')){ // Only fill in if the branch has not been filled
+		if(toPrepend.text().trim() === ''){ // Only fill in if the branch has not been filled
 			var item_id = $(element).attr('data-itemid');
 			var data;
 

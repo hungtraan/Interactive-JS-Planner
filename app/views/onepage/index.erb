@@ -41,56 +41,26 @@
 		</ul>
 	</div>
 	<!-- /#sidebar-wrapper -->
+
+	<!-- Main content -->
 	<div id="page-content-wrapper">
 		<div class="container-fluid">
 			<div class="row">
-				<% if (false) %>
-				<div class="col-md-12 object-tree">
-					<!-- <a href="#menu-toggle" class="btn btn-default" id="menu-toggle">Toggle Menu</a> -->
-					<div class="tree">
-						<% @itemsWithNoParent.each do |item|
-						has_children = item.hasChildren? %>
-						<div class="item" data-itemid="<%= item.id %>">
-							<i class="item-expander glyphicon glyphicon-plus"<% if(!has_children) %> style="visibility:hidden;" <% end %>></i>
-							<span class="item-name" contenteditable="true" data-name="name"><%= item.name %></span>
-							
-							<% if(has_children) %>
-							<div class='collapse'></div>
-							<% end %>
-						</div>
-						<% end %>
-						
-					</div>
-				</div>
-				<% end %>
 				<div class="new-tree tree col-md-12">
 					<div id="fontSizeWrapper">
 						<label for="fontSize">Tree Zoom</label>
 						<input type="range" value="1" id="fontSize" step="0.05" min="1" max="1.5" />
 					</div>
 					<div class="project-title">
-						<h3>Tree</h3>
+						<h3 contenteditable="true">Project CodeClarity</h3>
 					</div>
 
 					<ul class="tree" id="sortable">
 						<li class="item root" data-itemid="0" id="0">
 							<div class="root-fake-handler"></div>
 							<ul class="children">
-								<% if @itemsWithNoParent.length != 0 
-
-								@itemsWithNoParent.each do |item|
-								has_children = item.hasChildren? %>
-									<li class="item" data-itemid="<%= item.id %>" id="item_<%= item.id %>">
-									<i class="fa fa-bars mover" aria-hidden="true"></i>
-									<% if(has_children) %>
-										<input type="checkbox" data-itemid="<%= item.id %>" id="c<%= item.id %>"/>
-										<label class="expander" for="c<%= item.id %>"></label>
-									<% end %>
-									<div class="tree_label item-name" data-parentid="0" data-itemid="<%= item.id %>" data-name="name" contenteditable="true" id="item_<%= item.id %>"><%= item.name %></div>
-									<ul class="children"></ul>
-									</li>
-								<% end %>
-
+								<% if @itemsWithNoParent.length != 0 %> 
+									<%= render 'item', itemId: 0 %>
 								<% else %>
 									<li class="item" id="item_<%= item.id %>">
 										<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>

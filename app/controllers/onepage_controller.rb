@@ -4,6 +4,11 @@ class OnepageController < ApplicationController
 		@itemsWithNoParent = Item.where(parent_id: [nil, 0]).order(order_index: :asc)
 	end
 
+	def item
+		puts itemId
+		@item = Item.find(itemId)
+	end
+
 	def getChildren
 		# Get time frame from POST request
         itemId = params[:item_id]

@@ -31,11 +31,16 @@ class Item < ActiveRecord::Base
 			childObj = {
 				:id => child.id,
 				:name => child.name,
-				:has_children => child.hasChildren?
+				:has_children => child.hasChildren?,
+				:expanded => child.expanded?
 			}
 			children.push(childObj)
 		end
 		return children
+	end
+
+	def getChildrenObject
+		return self.children.order(order_index: :asc)
 	end
 
 	# Add children to a parent item
@@ -68,4 +73,7 @@ class Item < ActiveRecord::Base
 	  children.exists?
 	end
 
+	def expanded?
+		return (expanded==1)
+	end
 end
