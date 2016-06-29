@@ -221,6 +221,10 @@ $primary-color : #00b7f1;
 					> .tree_label:before{
 						left: -3.65em;
 					}
+
+					> input:checked ~ div.tree_label:after{
+						left: -2.65em;
+					}
 				}
 
 				> .mover{
