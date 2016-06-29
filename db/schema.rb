@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160621181953) do
+ActiveRecord::Schema.define(version: 20160629171842) do
 
   create_table "items", force: :cascade do |t|
     t.string   "name",        limit: 255
@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(version: 20160621181953) do
     t.datetime "updated_at",                null: false
     t.integer  "parent_id",   limit: 4
     t.float    "order_index", limit: 24
+    t.integer  "expanded",    limit: 1
   end
 
 end

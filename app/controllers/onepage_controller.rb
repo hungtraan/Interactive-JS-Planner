@@ -141,4 +141,17 @@ class OnepageController < ApplicationController
 		head 200, content_type: "text/html"
 	end	
 
+	def expandToggle
+		itemId = params[:item_id]
+		val = params[:value]
+		if Item.exists?(itemId)
+			item = Item.find(itemId)
+			if item.expanded != val
+				item.expanded = val
+				item.save
+			end
+		end
+		head 200, content_type: "text/html"
+	end
+
 end

@@ -50,7 +50,8 @@ class Item < ActiveRecord::Base
 	def setParent(pid)
 		if self.parent_id != pid
 			self.parent_id=pid
-			if pid == nil || pid == '' || pid == 0
+
+			if pid == nil || pid == '' || pid == 0 || pid == '0'
 				self.parent_name = nil
 			elsif Item.exists?(pid)
 				self.parent_name = Item.find(pid).name

@@ -127,9 +127,11 @@ $(document).ready(function() {
 
 	// Expand and get children via AJAX
 	$(document).on('change','li.item > input[type=checkbox]', function(){
-		if (!this.checked) { //do nothing if go from uncheck to checked
+		if (!this.checked) { // Collapse
 			$(this).siblings('div.tree_label').removeClass('expanded');
 			$(this).parent('li').removeClass('expanded');
+			expandToggle($(this).parent('li').attr('data-itemid'), 0);
+			// Note: (Future direction) Move to save expand-collapse state every 30s/60s instead of save on change to save number of requests to server
 			return;
 		}
 		expandBranch(this);
@@ -573,8 +575,8 @@ $(document).ready(function() {
 			url: '/update_parent_children',
 			method: "POST",
 			data: {
-				parent_id: parent_id,
-				item_id: child_id,
+				parent_id: parseInt(parent_id),
+				item_id: parseInt(child_id),
 			},
 			success: function(){
 				$('#item_'.child_id).attr('data-parentid',parent_id);
@@ -627,10 +629,24 @@ $(document).ready(function() {
 				        }
 						toPrepend.prepend(children_html);
 						loader.removeClass('enabled'); // Hide loader
+						expandToggle(item_id, 1);
 		            }
 		        });
 			}
 		}
+	};
+
+	// Toggle expand/collapse state in DB
+	// Note: (Future direction) Move to save expand-collapse state every 30s/60s instead of save on change to save number of requests to server
+	var expandToggle = function(item_id, state){
+		$.ajax({
+			method: "POST",
+			url: "/update_expand_collapse",
+			data: {
+				item_id: item_id,
+				value: state
+			}
+		});
 	};
 
 	// Update order index of items
