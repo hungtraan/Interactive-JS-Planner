@@ -34,6 +34,18 @@ $(document).ready(function() {
 	var originalSerialized = '';
 	var serialized = '';
 	
+	/* EVENT HANDLERS */
+
+	// Click on a parent item on the breadcrumb will be similar to
+	// clicking on the parent item in the tree
+	$('ul.breadcrumb-onepage').on('click', 'a.parents',function(e){
+		e.preventDefault();
+		var itemToFocus = $(this).attr('data-itemid');
+		$('div.tree_label[data-itemid="' + itemToFocus + '"]').click();
+	});
+
+
+	// Support item sorting by drag and drop
 	$('#sortable').nestedSortable({
         handle: 'i.mover',
         helper:	'clone',
@@ -72,10 +84,11 @@ $(document).ready(function() {
 			
 		// }
 	});
-
-	
 	$('[contenteditable=true]').unbind(); // to make contenteditable work again with nestedsortable
 	
+	// Confirm deletion for deleting item with children
+	var confirmDelete = function(){ //only placeholder to be redefined later 
+	};
 	$( "#dialog-confirm" ).dialog({
 		resizable: false,
 		autoOpen: false,
@@ -92,8 +105,6 @@ $(document).ready(function() {
 		}
 	});
 
-	var confirmDelete = function(){ //only placeholder to be redefined later 
-	};
 
 	// Highlight and Load detail when clicking on an item in tree
 	$('.tree').on('click','.tree_label.item-name', function(event){
@@ -161,10 +172,12 @@ $(document).ready(function() {
 		$('.tree').unbind('mouseover');
 	});
 
+	/* END EVENT HANDLERS */
 
-	// Live ajax save with HTML5 contenteditable
-	// $('span[contenteditable=true]').focus() would not work
-	// since it does not recognize newly inserted elements
+	/* Live ajax save with HTML5 contenteditable
+	 * $('span[contenteditable=true]').focus() would not work
+	 * since it does not recognize newly inserted elements
+	 */
 	var focusContentEditable = function(element){
 		var originalDetail = element.text();
 		
@@ -207,7 +220,7 @@ $(document).ready(function() {
 
 				// When current item's data-parentid is different from its real parent in the DOM, update relationship
 				var possibleParentId = element.parent('li').parent('ul').parent('li').attr('data-itemid');
-				if (element.attr('data-parentid') != element.parent('li').parent('ul').parent('li').attr('data-itemid') && possibleParentId !== undefined){
+				if (element.attr('data-parentid') !== undefined && possibleParentId !== undefined && element.attr('data-parentid') !== possibleParentId){
 					setChildrenParent(element.attr('data-itemid'), possibleParentId);
 				}
 			}
@@ -215,7 +228,6 @@ $(document).ready(function() {
 			
 			if (contentText !== originalDetail){
 				originalDetail = contentText;
-				console.log("hey");
 				updateItem(element);
 				loadDetail(element, false);
 			}
@@ -347,7 +359,6 @@ $(document).ready(function() {
 
 				        case 40: // Down
 				        	var nextItem;
-				        	console.log("Listening to: ", element);
 				        	if (element.hasClass('expanded')){ // support traversing parent -> children
 				        		nextItem = element.parent().find('ul > li.item:first-child > div.tree_label');
 				        	} else { // same-level traversing
@@ -489,9 +500,9 @@ $(document).ready(function() {
 		$('.object-editor span.item-by').attr('data-itemid', item_id);
 
 		var breadcrumb_li = "";
-		var parents_li = "<li><a class=\"parents\" href=\"#\">";
+		var parents_li = "<li><a class=\"parents\" href=\"#\"";
 		parents.forEach(function(item){
-			breadcrumb_li += parents_li + item.name + "</a></li>";
+			breadcrumb_li += parents_li + "data-itemid=\"" + item.id + "\">" + item.name + "</a></li>";
 		});
 		var thisItem_li = "<li class=\"selected\">" + object.name + "</li>";
 		$('.breadcrumb-onepage').html("");
@@ -640,10 +651,7 @@ $(document).ready(function() {
 				item_id: itemId,
 				next_item_id: nextItemId,
 				prev_item_id: prevItemId,
-			},
-			// success: function(){
-			// 	console.log("Yay");
-			// }
+			}
     	});
 	};
 

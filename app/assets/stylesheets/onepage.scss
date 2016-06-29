@@ -281,18 +281,24 @@ $primary-color : #00b7f1;
 		  content: '–' !important;
 		}
 
-		:checked ~ .tree_label:after{
-			position: absolute;
-			bottom: 3px;
-			left: -1.5em;
-			display: block;
-			height: 0.5em;
-			width: 1em;
-			border-top: 1px solid #777;
-			border-right: 1px solid #777;
-			border-radius: 0 .3em 0 0;
-			content: '';
+		:checked ~ .tree_label{
+			&:after{
+				position: absolute;
+				bottom: 3px;
+				left: -1.5em;
+				display: block;
+				height: 0.5em;
+				width: 1em;
+				border-top: 1px solid #777;
+				border-right: 1px solid #777;
+				border-radius: 0 .3em 0 0;
+				content: '';
+			}
+			&:focus:after{
+				height: 1.2em;
+			}
 		}
+
 		/* ————————————————————–
 		  Tree branches
 		*/
@@ -520,6 +526,12 @@ footer{
 	position: fixed;
 	bottom:0;
 	width: 100%;
+	p {
+		padding-top: 10px;
+		background: #fff;
+		border-top: 1px solid #e5e5e5;
+	    margin-bottom: 0px;
+	}
 }
 
 
