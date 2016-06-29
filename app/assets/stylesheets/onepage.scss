@@ -87,7 +87,7 @@ $primary-color : #00b7f1;
 			float: left;
 			text-decoration: none; 
 			text-align: center;
-			padding: 10px 0 10px 30px;
+			padding: 10px 0 10px 25px;
 			position: relative; 
 			display: block;
 			float: left;
@@ -104,15 +104,17 @@ $primary-color : #00b7f1;
 					z-index: 2; 
 				}
 				&:before { 
-					content: ">"; 
-					color:#000;
-					display: block; 
-					width: 100%; 
-					height: 100%;
-					position: absolute;
-					margin-left: 1px;
-					left: 70%;
-					z-index: 1; 
+					content: "\f105";
+				    font: normal normal normal 14px/1 FontAwesome;
+				    color: #000;
+				    display: block;
+				    width: 100%;
+				    height: 100%;
+				    top: 32%;
+				    position: absolute;
+				    margin-left: 1px;
+				    left: 82%;
+				    z-index: 1;
 				}
 			}	
 			&:first-child {
