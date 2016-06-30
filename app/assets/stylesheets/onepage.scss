@@ -203,6 +203,7 @@ body{
 		/* ————————————————————–
 		  Tree core styles
 		*/
+		$tree-line-color: rgba(0, 188, 212, 0.6);
 
 		.tree {
 			margin: 1em;
@@ -228,7 +229,7 @@ body{
 			    padding: 0 0 1em 2em;
 			    list-style: none;
 			    label.expander {
-				  	background: #000;
+				  	background: #2196f3;
 				    color: #fff;
 				    position: relative;
 				    z-index: 100;
@@ -302,7 +303,7 @@ body{
 		  position: relative;
 		  display: inline-block;
 		  &:last-child:before{
-		  	border-bottom: 1px solid #777;
+		  	border-bottom: 1px solid $tree-line-color;
 		  }
 		  	&.first-item-placeholder[contenteditable=true]:empty:before {
 				content: attr(placeholder);
@@ -319,8 +320,8 @@ body{
 				display: block;
 				height: 0.5em;
 				width: 1.8em;
-				border-bottom: 1px solid #777;
-				border-left: 1px solid #777;
+				border-bottom: 1px solid $tree-line-color;
+				border-left: 1px solid $tree-line-color;
 				border-radius: 0 0 0 .3em;
 				content: '';
 			}
@@ -342,8 +343,8 @@ body{
 				display: block;
 				height: 0.5em;
 				width: 1em;
-				border-top: 1px solid #777;
-				border-right: 1px solid #777;
+				border-top: 1px solid $tree-line-color;
+				border-right: 1px solid $tree-line-color;
 				border-radius: 0 .3em 0 0;
 				content: '';
 			}
@@ -363,7 +364,7 @@ body{
 		  left: -.5em;
 		  display: block;
 		  width: 0;
-		  border-left: 1px solid #777;
+		  border-left: 1px solid $tree-line-color;
 		  content: "";
 		}
 
