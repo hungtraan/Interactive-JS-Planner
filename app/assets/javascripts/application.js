@@ -55,6 +55,9 @@ $(document).ready(function() {
 	});
 
 
+	activateTags();
+	
+
 	// Support item sorting by drag and drop
 	$('#sortable').nestedSortable({
         handle: 'i.mover',
@@ -233,6 +236,7 @@ $(document).ready(function() {
 				// When current item's data-parentid is different from its real parent in the DOM, update relationship
 				var possibleParentId = element.parent('li').parent('ul').parent('li').attr('data-itemid');
 				if (element.attr('data-parentid') !== undefined && possibleParentId !== undefined && element.attr('data-parentid') !== possibleParentId){
+					console.log(element.attr('data-parentid'), possibleParentId);
 					setChildrenParent(element.attr('data-itemid'), possibleParentId);
 				}
 			}
@@ -626,6 +630,8 @@ $(document).ready(function() {
 
 				        // Display HTML of children
 				        if(data!==undefined){
+				        	// To-do: Refactor code to render this from partial _item
+
 				        	// @input: an input[type=checkbox] element
 				        	var thisItemId = $(element).attr('data-itemid');
 				        	data.forEach(function(item){
@@ -701,3 +707,38 @@ $(document).ready(function() {
 });
 
 
+
+var activateTags = function(){
+	$('.tags').on('mouseover','div.tag', function(e){
+		$(this).children('.delete-tag').show();
+	}).on('mouseleave','.tag', function(e){
+		$(this).children('.delete-tag').hide();
+	});
+	$('.tags').on('click','i.delete-tag', function(){
+		$(this).parent('.tag').remove();
+		// Remove from DB
+	});
+
+	$(document).on('keyup', '.tags input', function (e) {
+		var key = e.keyCode || e.which;
+        if (key === 13 || key === 188) { // Return-Enter key || comma key
+        	var text = $(this).val().replace(',', '');
+        	if (text !== '') {
+                $('.tags input').before('<div class=\'tag\'>' + text + '<i class="fa fa-times delete-tag" aria-hidden="true"></i></div>');
+                $(this).val('');
+            }
+        } else if (key === 8) { // Delete-Backspace key
+            if ($(this).val() === '') {
+                if ($(this).prev('.tag').length !== 0){
+                	if ($(this).prev('.tag').hasClass('highlight')){
+                		$(this).prev('.tag').remove();
+                		// Remove from DB
+                	}
+                	else{
+                		$(this).prev('.tag').addClass('highlight');	
+                	}
+                }
+            }
+        }
+    });
+};

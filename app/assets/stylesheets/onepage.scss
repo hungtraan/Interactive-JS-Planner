@@ -118,7 +118,7 @@ body{
 		background-color: #fff;
 	    box-shadow: 0px 2px 2px 2px #e1e1e1;
 	    padding: 15px 25px 15px 25px;
-        margin: 10px;
+     //    margin: 10px;
 	}
 
 	[contenteditable]:hover, [contenteditable]:focus {
@@ -139,7 +139,7 @@ body{
 	    padding-left: 0px;
         border-bottom: 1px solid #ddd;
     	padding-bottom: 10px;
-	
+    	
 		li{
 			float: left;
 		    text-decoration: none;
@@ -150,6 +150,7 @@ body{
 			
 			a{
 				color: rgb(233, 119, 73);
+				cursor: auto;
 				&:after{
 					content: "\f105";
 					color: rgb(233, 119, 73);
@@ -403,8 +404,8 @@ body{
 	.object-editor{
 		z-index: 100;
 	    position: absolute;
-	    right: 2%;
-	    top: 12%;
+        right: 2em;
+    	top: 7em;
 	    background-color: #efefef;
 
 		&.closed{
@@ -570,6 +571,57 @@ body{
 				width: $size*2;
 			}
 		}
+	}
+}
+
+
+.tags {
+    background-color: #efefef;
+    width: 100%;
+    height: auto;
+    padding: 0.5em 0.5em 0 0.5em;
+    border-radius: 3px;
+	
+	input {
+	    float: left;
+	    background-color: inherit;
+	    font-size: 1em;
+	    outline: none;
+	    border-top: 0;
+	    border-right: 0;
+	    border-left: 0;
+	    border-bottom: 1px solid #dedede;
+	    padding: 0.25em 0;
+	    margin-bottom: 0.5em;
+	    &:focus{
+	    	outline: none;
+	    }
+	}
+	
+	.tag {
+		display: block;
+		float: left;
+		background-color: #e99349;
+		color: #fff;
+		padding: 0.25em 0.5em;
+		border-radius: 3px;
+		margin-right: 0.5em;
+		margin-bottom: 0.5em;
+		cursor: pointer;
+		&.highlight,:hover {
+			background-color: rgb(233, 147, 73);
+		}
+		.delete-tag{
+			display: none;
+			margin-left: 5px;
+			border-left: 1px solid #fff;
+			padding-left:2px;
+		}
+	}
+	&:after {
+		content: "";
+		clear: both;
+		display: table;
 	}
 }
 
