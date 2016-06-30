@@ -10,8 +10,7 @@ class OnepageController < ApplicationController
 	end
 
 	def getChildren
-		# Get time frame from POST request
-        itemId = params[:item_id]
+		itemId = params[:item_id]
         thisItem = Item.find(itemId)
 		children_arr = thisItem.getChildren
         

@@ -28,6 +28,9 @@ localCacheDetail = {};
 
 $(document).ready(function() {
 	var loader = $('.loader');
+	$('#fontSize').on('input', function(){ 
+	  	setFontSize($(this)); 
+	});
 
 	// $(this).toggleClass("textedit moveitem");
 	var firstLocationRemembered = 0;
@@ -42,6 +45,13 @@ $(document).ready(function() {
 		e.preventDefault();
 		var itemToFocus = $(this).attr('data-itemid');
 		$('div.tree_label[data-itemid="' + itemToFocus + '"]').click();
+	});
+
+	$('.object-editor').on('click', '.close-sign',function(){
+		// $('.object-tree, .new-tree').toggleClass('col-md-12 col-md-6');
+		$('.object-editor').addClass('closed');
+		// $('.object-editor').toggleClass('col-md-5');
+		$('.object-editor').removeClass('is-open');
 	});
 
 
@@ -110,9 +120,9 @@ $(document).ready(function() {
 	$('.tree').on('click','.tree_label.item-name', function(event){
 		var editor = $('.object-editor');
 		if(!editor.hasClass('is-open')){
-			$('.object-tree, .new-tree').toggleClass('col-md-12 col-md-8');
+			// $('.object-tree, .new-tree').toggleClass('col-md-12 col-md-6');
 			editor.removeClass('closed');
-			editor.toggleClass('col-md-4');
+			// editor.toggleClass('col-md-5');
 			editor.addClass('is-open');
 		}
 		if(!$(this).hasClass('selected')){
@@ -671,29 +681,23 @@ $(document).ready(function() {
     	});
 	};
 
+	// Helper functions for Zooming tool
+	var isNumber = function(n) {
+		return !isNaN(parseFloat(n)) && isFinite(n);
+	};
+
+	var setFontSize = function(el) {
+		var fontSize = el.val();
+
+		if ( isNumber(fontSize) && fontSize >= 0.5 ) {
+			$('.tree').css({ fontSize: fontSize + 'em' });
+		} else if ( fontSize ) {
+			el.val('1');
+			$('.tree').css({ fontSize: '1em' });  
+		}
+	};
    
 	// END HELPER FUNCTIONS ==============================================
 });
 
 
-// Helper functions for Zooming tool
-function isNumber(n) {
-  return !isNaN(parseFloat(n)) && isFinite(n);
-}
-
-function setFontSize(el) {
-    var fontSize = el.val();
-    
-    if ( isNumber(fontSize) && fontSize >= 0.5 ) {
-      $('.tree').css({ fontSize: fontSize + 'em' });
-    } else if ( fontSize ) {
-      el.val('1');
-      $('.tree').css({ fontSize: '1em' });  
-    }
-}
-
-$(function() {
-  $('#fontSize').on('input', function(){ 
-  	setFontSize($(this)); 
-  });
-});

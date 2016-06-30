@@ -1,17 +1,29 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/nestedSortable/2.0.0/jquery.mjs.nestedSortable.js"></script>
-<nav class="navbar navbar-inverse">
+<!-- <nav class="navbar navbar-inverse">
 	<div class="container">
 		<div class="navbar-header">
 			<a class="navbar-brand" href="#">CodeClarity</a>
 		</div>
+		<div class="user-area">
+			<div class="user-info">
+				<div class="user-photo"></div>
+				<div class="user-name"></div>
+			</div>
+			<div class="user-menu">
+				<ul class="menu">
+					<li class="logout"></li>
+				</ul>
+			</div>
+		</div>
 	</div>
-</nav>
+</nav> -->
 <div class="wrapper">
 	<!-- Sidebar -->
 	<div id="sidebar-wrapper">
+		<h3>CodeClarity</h3>
 		<ul class="sidebar-nav">
 			<li class="sidebar-brand">
-				<h3>Tags</h3>
+				<h4>Tags</h4>
 			</li>
 			<li class="tags">
 				<a href="#">Dummy tag</a>
@@ -23,7 +35,7 @@
 				<a href="#">Dummy tag</a>
 			</li>
 			<li class="sidebar-brand">
-				<h3>Filters</h3>
+				<h4>Filters</h4>
 			</li>
 			
 			<li class="filters">
@@ -45,16 +57,16 @@
 	<!-- Main content -->
 	<div id="page-content-wrapper">
 		<div class="container-fluid">
+			<div class="row col-md-12">
+				<div class="project-title" contenteditable="true">Project CodeClarity
+				</div>
+			</div>
 			<div class="row">
-				<div class="new-tree tree col-md-12">
-					<div id="fontSizeWrapper">
+				<div class="new-tree tree card col-md-12">
+					<!-- <div id="fontSizeWrapper">
 						<label for="fontSize">Tree Zoom</label>
 						<input type="range" value="1" id="fontSize" step="0.05" min="1" max="1.5" />
-					</div>
-					<div class="project-title">
-						<h3 contenteditable="true">Project CodeClarity</h3>
-					</div>
-
+					</div> -->					
 					<ul class="tree" id="sortable">
 						<li class="item root" data-itemid="0" id="0">
 							<div class="root-fake-handler"></div>
@@ -70,28 +82,31 @@
 						</li>
 					</ul>
 				</div>
-				<div class="object-editor closed">
+				<div class="object-editor closed card col-md-5">
+					<div class="close-sign">
+						<i class="fa fa-times-circle" aria-hidden="true"></i>
+					</div>
 					<ul class="breadcrumb-onepage">
 					</ul>
 					<p>
-						<span>ID:</span>
+						<span class="detail-title">ID:</span>
 						<span class="item-id" data-name="id" data-itemid></span>
 					</p>
 					<p>
-						<span>Name:</span>
+						<span class="detail-title">Name:</span>
 						<span class="item-name" contenteditable="true" data-name="name" data-itemid></span>
 					</p>
 					<p>
-						<span>Parent:</span>
+						<span class="detail-title">Parent:</span>
 						<span class="item-parent" data-name="parent_name" data-itemid></span>
 					</p>
 					<p>
-						<span>Description:</span>
+						<span class="detail-title">Description:</span>
 						<span class="item-desc" contenteditable="true" data-name="description" data-itemid></span>
 					</p>
 					<p>
-						<span>Creator:</span>
-						<span class="item-by" contenteditable="true" data-name="by" data-itemid></span>
+						<span class="detail-title">Creator:</span>
+						<span class="item-by" contenteditable="true" data-name="by_name" data-itemid></span>
 					</p>
 				</div>
 			</div>
