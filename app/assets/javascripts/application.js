@@ -25,6 +25,7 @@
 // Future direction: Either local storage, InnoDB, app cache,  (even service worker?)
 localCacheTree = {};
 localCacheDetail = {};
+localCacheTags = {};
 
 $(document).ready(function() {
 	var loader = $('.loader');
@@ -469,16 +470,18 @@ $(document).ready(function() {
     };
 
     // Load detail of item
-    // @input jquery element, boolean of using localCache, default true
+    // @input jquery div.tree_label element, boolean of using localCache, default true
     // ajax get details of the item and insert into object viewer
     var loadDetail = function(element, useCache=true) {
     	var data;
     	var item_id = element.attr('data-itemid');
     	if (item_id === undefined) {return;}
-    	if (localCacheTree[item_id] && useCache){
+    	if (localCacheTree[item_id] && useCache && localCacheTags[item_id]){
 			loader.removeClass('enabled'); // Hide loader
 			data = localCacheTree[item_id];
 			showDetailOnSide(data, item_id);
+			tagHtml = localCacheTags[item_id];
+			$('.object-editor .tags').prepend(tagHtml);
 		}
 		else{
 			loader.addClass('enabled'); // Show loader animation if the request takes too long
@@ -494,6 +497,21 @@ $(document).ready(function() {
 	            	localCacheTree[item_id] = data;
 	            	if(data!==undefined){
 			        	showDetailOnSide(data, item_id);
+			        }
+	            }
+	        });
+
+	        $.ajax({
+	            method: "GET",
+	            url: "/get_tags",
+	            data: {
+	                item_id: item_id
+	            },
+	            success: function(html) {
+	            	localCacheTags[item_id] = html;
+	            	if(data!==undefined){
+	            		console.log(html);
+			        	$('.object-editor .tags').prepend(html);
 			        }
 	            }
 	        });
@@ -514,6 +532,7 @@ $(document).ready(function() {
 		$('.object-editor span.item-parent').attr('data-itemid', item_id);
 		$('.object-editor span.item-desc').attr('data-itemid', item_id);
 		$('.object-editor span.item-by').attr('data-itemid', item_id);
+		$('.object-editor div.tag-area div.tags').attr('data-itemid',object.id);
 
 		var breadcrumb_li = "";
 		var parents_li = "<li><a class=\"parents\" href=\"#\"";
@@ -715,8 +734,9 @@ var activateTags = function(){
 		$(this).children('.delete-tag').hide();
 	});
 	$('.tags').on('click','i.delete-tag', function(){
+		var tag_id = $(this).parent('.tag').attr('data-tagid');
+		if (tag_id !== undefined) deleteTag(tag_id);
 		$(this).parent('.tag').remove();
-		// Remove from DB
 	});
 
 	$(document).on('keyup', '.tags input', function (e) {
@@ -725,6 +745,8 @@ var activateTags = function(){
         	var text = $(this).val().replace(',', '');
         	if (text !== '') {
                 $('.tags input').before('<div class=\'tag\'>' + text + '<i class="fa fa-times delete-tag" aria-hidden="true"></i></div>');
+                var item_id = $(this).parent('.tags').attr('data-itemid')
+                createTag(item_id, text);
                 $(this).val('');
             }
         } else if (key === 8) { // Delete-Backspace key
@@ -732,7 +754,8 @@ var activateTags = function(){
                 if ($(this).prev('.tag').length !== 0){
                 	if ($(this).prev('.tag').hasClass('highlight')){
                 		$(this).prev('.tag').remove();
-                		// Remove from DB
+                		var tag_id = $(this).prev('.tag').attr('data-tagid');
+                		if (tag_id !== undefined) deleteTag(tag_id);
                 	}
                 	else{
                 		$(this).prev('.tag').addClass('highlight');	
@@ -742,3 +765,30 @@ var activateTags = function(){
         }
     });
 };
+
+var createTag = function(item_id, text){
+	$.ajax({
+		url: '/create_tag',
+		method: 'POST',
+		data: {
+			item_id: item_id,
+			tag_name: text
+		},
+		success: function(tag_id){
+			if (tag_id !== undefined){
+				console.log(tag_id);
+				$('.object-editor .tags tag:last-child').attr('data-tagid',tag_id);
+			}
+		}
+	});
+}
+
+var deleteTag = function(tag_id){
+	$.ajax({
+		url: '/delete_tag',
+		method: 'POST',
+		data: {
+			tag_id: tag_id
+		}
+	});
+}

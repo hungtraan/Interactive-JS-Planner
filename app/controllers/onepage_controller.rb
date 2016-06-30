@@ -4,11 +4,6 @@ class OnepageController < ApplicationController
 		@itemsWithNoParent = Item.where(parent_id: [nil, 0]).order(order_index: :asc)
 	end
 
-	def item
-		puts itemId
-		@item = Item.find(itemId)
-	end
-
 	def getChildren
 		itemId = params[:item_id]
         thisItem = Item.find(itemId)
@@ -158,4 +153,30 @@ class OnepageController < ApplicationController
 		head 200, content_type: "text/html"
 	end
 
+	def getTags
+		render partial: 'tag', locals: { itemId: params[:item_id] }
+	end
+
+	def createTag
+		tag_name = params[:tag_name]
+		item_id = params[:item_id]
+		if Item.exists?(item_id)
+			newTag = Tag.create(tag: tag_name, item_id: item_id)
+			newTag.save
+			render plain: newTag.id, :status => 200, :content_type => 'text/html'
+		else
+			render plain: "Item does not exist", :status => 200, :content_type => 'text/html'
+		end
+	end
+
+	def deleteTag
+		tag_id = params[:tag_id]
+		if Tag.exists?(tag_id)
+			tag = Tag.destroy(tag_id)
+			tag.save
+			head 200, content_type: "text/html"
+		else
+			render plain: "Tag does not exist", :status => 200, :content_type => 'text/html'
+		end
+	end
 end

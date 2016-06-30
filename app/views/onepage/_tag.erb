@@ -1,0 +1,10 @@
+<% 
+p itemId
+tags = Item.find(itemId).tag 
+tags.each do |tag|
+%>
+<div class="tag" data-tagid="<%= tag.id %>">
+	<%= tag.tag %>
+	<i class="fa fa-times delete-tag" aria-hidden="true"></i>
+</div>
+<% end %>

@@ -6,12 +6,16 @@ Rails.application.routes.draw do
 
   match 'get_children' => 'onepage#getChildren', via: :get
   match 'get_detail' => 'onepage#getDetail', via: :get
+  match 'get_tags' => 'onepage#getTags', via: :get
   match 'update_individual_detail' => 'onepage#updateIndividualDetail', via: :post
   match 'create_item' => 'onepage#createItem', via: :post
   match 'delete_item' => 'onepage#deleteItem', via: :post
   match 'update_parent_children' => 'onepage#updateParentChildren', via: :post
   match 'update_order_index' => 'onepage#updateOrderIndex', via: :post
   match 'update_expand_collapse' => 'onepage#expandToggle', via: :post
+  match 'create_tag' => 'onepage#createTag', via: :post
+  match 'delete_tag' => 'onepage#deleteTag', via: :post
+
   # You can have the root of your site routed with "root"
   # root 'welcome#index'
 
