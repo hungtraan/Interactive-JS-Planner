@@ -6,7 +6,7 @@ Rails.application.routes.draw do
 
   match 'get_children' => 'onepage#getChildren', via: :get
   match 'get_detail' => 'onepage#getDetail', via: :get
-  match 'get_tags' => 'onepage#getTags', via: :get
+  match 'get_tags_html' => 'onepage#getTagsHtml', via: :get
   match 'update_individual_detail' => 'onepage#updateIndividualDetail', via: :post
   match 'create_item' => 'onepage#createItem', via: :post
   match 'delete_item' => 'onepage#deleteItem', via: :post

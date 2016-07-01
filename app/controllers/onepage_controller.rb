@@ -2,6 +2,7 @@ class OnepageController < ApplicationController
 
 	def index
 		@itemsWithNoParent = Item.where(parent_id: [nil, 0]).order(order_index: :asc)
+		@totalTagNum = Tag.count
 	end
 
 	def getChildren
@@ -153,30 +154,48 @@ class OnepageController < ApplicationController
 		head 200, content_type: "text/html"
 	end
 
-	def getTags
-		render partial: 'tag', locals: { itemId: params[:item_id] }
+	def getTagsHtml
+		render partial: 'tag', locals: { itemId: params[:item_id], limit: params[:limit] }
 	end
 
 	def createTag
+		# Will solve tag duplication with Javascript
 		tag_name = params[:tag_name]
 		item_id = params[:item_id]
-		if Item.exists?(item_id)
-			newTag = Tag.create(tag: tag_name, item_id: item_id)
-			newTag.save
-			render plain: newTag.id, :status => 200, :content_type => 'text/html'
+
+		if Tag.exists?(tag: tag_name)
+			tag = Tag.find_by(tag: tag_name)
+			# If tag exists but not associated with item,
+			# then create this association
+			if !tag.item.exists?(item_id) && Item.exists?(item_id)
+				tag.item << Item.find(item_id)
+				tag.save
+				render plain: tag.id, :status => 200, :content_type => 'text/html'
+			end
 		else
-			render plain: "Item does not exist", :status => 200, :content_type => 'text/html'
+			# Create tag then associate with item
+			if Item.exists?(item_id)
+				item = Item.find(item_id)
+				newTag = Tag.create(tag: tag_name)
+				item.tag << newTag
+				newTag.save
+				item.save
+				render plain: newTag.id, :status => 200, :content_type => 'text/html'
+			else
+				render plain: "Item does not exist", :status => 200, :content_type => 'text/html'
+			end
 		end
 	end
 
 	def deleteTag
 		tag_id = params[:tag_id]
-		if Tag.exists?(tag_id)
-			tag = Tag.destroy(tag_id)
-			tag.save
+		item_id = params[:item_id]
+		if Tag.exists?(tag_id) && Item.exists?(item_id)
+			assoc = item.tag.delete(tag_id)
+			assoc.save
 			head 200, content_type: "text/html"
 		else
-			render plain: "Tag does not exist", :status => 200, :content_type => 'text/html'
+			render plain: "Tag or item does not exists", :status => 200, :content_type => 'text/html'
 		end
 	end
 end

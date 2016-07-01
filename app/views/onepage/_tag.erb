@@ -1,6 +1,5 @@
 <% 
-p itemId
-tags = Item.find(itemId).tag 
+tags = Item.find(itemId).tag.distinct
 tags.each do |tag|
 %>
 <div class="tag" data-tagid="<%= tag.id %>">

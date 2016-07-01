@@ -431,12 +431,12 @@ body{
 		span{
 			&.detail-title{
 				font-weight: bold;
-				width: 25%;
+				width: 35%;
 	    		display: inline-block;
 	    		// overflow: hidden;
 			}
 			&[contenteditable=true]{
-			    width: 70%;
+			    width: 60%;
 	    		display: inline-block;
 			}
 
@@ -576,12 +576,21 @@ body{
 
 
 .tags {
-    background-color: #efefef;
+    background-color: inherit;  // #efefef;
     width: 100%;
     height: auto;
-    padding: 0.5em 0.5em 0 0.5em;
+    padding: 0.5em 0.5em 0 0;
     border-radius: 3px;
 	
+	&.sidebar{
+		padding: 0.5em 0.5em 0 1.5em;
+		.tag {
+			background-color: inherit; 
+			color: #e99349;
+			border: 1px solid #e99349;
+		}
+	}
+
 	input {
 	    float: left;
 	    background-color: inherit;
@@ -596,6 +605,9 @@ body{
 	    &:focus{
 	    	outline: none;
 	    }
+	    &.tag-search{
+	    	color: #fff;
+	    }
 	}
 	
 	.tag {
@@ -609,13 +621,20 @@ body{
 		margin-bottom: 0.5em;
 		cursor: pointer;
 		&.highlight,:hover {
-			background-color: rgb(233, 147, 73);
+			background-color: #f44336;
+			color: #fff;
+			border: none;
+			&.delete{
+				background-color: #e99349 !important;
+				.delete-tag{
+					display: inline-block;
+				}
+			}
 		}
+		
 		.delete-tag{
 			display: none;
 			margin-left: 5px;
-			border-left: 1px solid #fff;
-			padding-left:2px;
 		}
 	}
 	&:after {

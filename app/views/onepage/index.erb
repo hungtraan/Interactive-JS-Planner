@@ -28,9 +28,12 @@
 			<!-- <li class="tags">
 				<a href="#">Dummy tag</a>
 			</li> -->
-			<li class="tag-area">
-				
-			</li>
+			<div class="tags sidebar">
+					<%= render partial: 'topTenTag',  locals: {limit: 10} %>
+					<% if @totalTagNum > 10 %>
+					<input class="tag-search" placeholder="Search <%= @totalTagNum %> available tags">
+					<% end %>
+			</div>
 			<li class="sidebar-brand">
 				<h4>Filters</h4>
 			</li>
@@ -108,6 +111,7 @@
 					<div class="tag-area">
 						<span class="detail-title">Tags</span>
 						<div class='tags'>
+							<div class="tag-area"></div>
 							<input placeholder='Add tag' type='text'>
 						</div>
 					</div>

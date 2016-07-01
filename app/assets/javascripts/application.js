@@ -26,6 +26,7 @@
 localCacheTree = {};
 localCacheDetail = {};
 localCacheTags = {};
+tagManager = {};
 
 $(document).ready(function() {
 	var loader = $('.loader');
@@ -237,7 +238,6 @@ $(document).ready(function() {
 				// When current item's data-parentid is different from its real parent in the DOM, update relationship
 				var possibleParentId = element.parent('li').parent('ul').parent('li').attr('data-itemid');
 				if (element.attr('data-parentid') !== undefined && possibleParentId !== undefined && element.attr('data-parentid') !== possibleParentId){
-					console.log(element.attr('data-parentid'), possibleParentId);
 					setChildrenParent(element.attr('data-itemid'), possibleParentId);
 				}
 			}
@@ -481,7 +481,7 @@ $(document).ready(function() {
 			data = localCacheTree[item_id];
 			showDetailOnSide(data, item_id);
 			tagHtml = localCacheTags[item_id];
-			$('.object-editor .tags').prepend(tagHtml);
+			$('.object-editor .tags > .tag-area').html(tagHtml);
 		}
 		else{
 			loader.addClass('enabled'); // Show loader animation if the request takes too long
@@ -503,15 +503,14 @@ $(document).ready(function() {
 
 	        $.ajax({
 	            method: "GET",
-	            url: "/get_tags",
+	            url: "/get_tags_html",
 	            data: {
 	                item_id: item_id
 	            },
 	            success: function(html) {
 	            	localCacheTags[item_id] = html;
 	            	if(data!==undefined){
-	            		console.log(html);
-			        	$('.object-editor .tags').prepend(html);
+	            		$('.object-editor .tags > .tag-area').html(html);
 			        }
 	            }
 	        });
@@ -706,6 +705,38 @@ $(document).ready(function() {
     	});
 	};
 
+	// Filter and Tags
+	// Tags
+	$('.tags.sidebar').on('click', '.tag', function(){
+		console.log(this);
+		var tagId = $(this).attr('data-tagid');
+		if (!$(this).hasClass('highlight')){
+			$(this).addClass('highlight delete');
+			// display these tags on the tree	
+			// $.ajax({
+			// 	method: "GET",
+			// 	url: "/get_item_from_tag",
+			// 	data: {
+			// 		tag_id: tagId,
+			// 	},
+			// 	success: function(json){
+			// 		itemsWithTag = json.items_with_tag;
+			// 		parents = json.parents;
+			// 		var selector;
+			// 		itemsWithTag.forEach(function(itemId){
+			// 			selector += '[data-itemid=' + itemId;
+			// 			selector += '],';
+			// 		});
+			// 		$('li:not(' + selector + ')').css('opacity','0.5');
+			// 	}
+			// });
+		} else {
+			$(this).removeClass('highlight');
+
+		}
+		
+	});
+
 	// Helper functions for Zooming tool
 	var isNumber = function(n) {
 		return !isNaN(parseFloat(n)) && isFinite(n);
@@ -728,12 +759,12 @@ $(document).ready(function() {
 
 
 var activateTags = function(){
-	$('.tags').on('mouseover','div.tag', function(e){
+	$('.tags:not(.sidebar)').on('mouseover','div.tag', function(e){
 		$(this).children('.delete-tag').show();
 	}).on('mouseleave','.tag', function(e){
 		$(this).children('.delete-tag').hide();
 	});
-	$('.tags').on('click','i.delete-tag', function(){
+	$('.tags:not(.sidebar)').on('click','i.delete-tag', function(){
 		var tag_id = $(this).parent('.tag').attr('data-tagid');
 		if (tag_id !== undefined) deleteTag(tag_id);
 		$(this).parent('.tag').remove();
@@ -745,20 +776,32 @@ var activateTags = function(){
         	var text = $(this).val().replace(',', '');
         	if (text !== '') {
                 $('.tags input').before('<div class=\'tag\'>' + text + '<i class="fa fa-times delete-tag" aria-hidden="true"></i></div>');
-                var item_id = $(this).parent('.tags').attr('data-itemid')
+                var item_id = $(this).parent('.tags').attr('data-itemid');
+
                 createTag(item_id, text);
-                $(this).val('');
+                $(this).val(''); // empty input field
             }
         } else if (key === 8) { // Delete-Backspace key
             if ($(this).val() === '') {
-                if ($(this).prev('.tag').length !== 0){
-                	if ($(this).prev('.tag').hasClass('highlight')){
-                		$(this).prev('.tag').remove();
-                		var tag_id = $(this).prev('.tag').attr('data-tagid');
-                		if (tag_id !== undefined) deleteTag(tag_id);
+            	var prevTag = $(this).prev('.tag');
+                if (prevTag.length !== 0){
+                	if (prevTag.hasClass('highlight')){
+                		prevTag.remove();
+                		var tag_id = prevTag.attr('data-tagid');
+                		if (tag_id !== undefined) deleteTag(tag_id, prevTag.attr('data-itemid'));
                 	}
                 	else{
-                		$(this).prev('.tag').addClass('highlight');	
+                		prevTag.addClass('highlight');	
+                	}
+                }
+            }
+        }
+        else if (key === 27){ // undo delete
+        	if ($(this).val() === '') {
+            	var prevTag = $(this).prev('.tag');
+                if (prevTag.length !== 0){
+                	if (prevTag.hasClass('highlight')){
+                		prevTag.removeClass('highlight');
                 	}
                 }
             }
@@ -776,19 +819,19 @@ var createTag = function(item_id, text){
 		},
 		success: function(tag_id){
 			if (tag_id !== undefined){
-				console.log(tag_id);
-				$('.object-editor .tags tag:last-child').attr('data-tagid',tag_id);
+				$('.object-editor .tags tag:last-child').attr('data-tagid',tag_id);	
 			}
 		}
 	});
-}
+};
 
-var deleteTag = function(tag_id){
+var deleteTag = function(tag_id, item_id){
 	$.ajax({
 		url: '/delete_tag',
 		method: 'POST',
 		data: {
-			tag_id: tag_id
+			tag_id: tag_id,
+			item_id: item_id
 		}
 	});
-}
+};

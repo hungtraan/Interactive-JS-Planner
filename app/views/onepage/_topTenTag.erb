@@ -1,0 +1,10 @@
+<% 
+tags = Tag.joins(:item).group('tag_id').order('count_tag desc').count('tag').first(limit)
+# SELECT COUNT(`tags`.`tag`) AS count_tag, tag_id AS tag_id FROM `tags` INNER JOIN `items_tags` ON `items_tags`.`tag_id` = `tags`.`id` INNER JOIN `items` ON `items`.`id` = `items_tags`.`item_id` GROUP BY tag_id  ORDER BY count_tag desc
+
+tags.each do |tag|
+	id = tag[0]
+	name = Tag.find(id).tag
+%>
+<div class="tag" data-tagid="<%= id %>"><%= name %><i class="fa fa-times delete-tag" aria-hidden="true"></i></div>
+<% end %>
