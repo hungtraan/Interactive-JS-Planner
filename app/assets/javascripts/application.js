@@ -26,7 +26,6 @@
 localCacheTree = {};
 localCacheDetail = {};
 localCacheTags = {};
-tagManager = {};
 
 $(document).ready(function() {
 	var loader = $('.loader');
@@ -707,35 +706,52 @@ $(document).ready(function() {
 
 	// Filter and Tags
 	// Tags
+	var selectedTagIds = [];
 	$('.tags.sidebar').on('click', '.tag', function(){
-		console.log(this);
-		var tagId = $(this).attr('data-tagid');
+		var tagId = parseInt($(this).attr('data-tagid'));
 		if (!$(this).hasClass('highlight')){
 			$(this).addClass('highlight delete');
-			// display these tags on the tree	
-			// $.ajax({
-			// 	method: "GET",
-			// 	url: "/get_item_from_tag",
-			// 	data: {
-			// 		tag_id: tagId,
-			// 	},
-			// 	success: function(json){
-			// 		itemsWithTag = json.items_with_tag;
-			// 		parents = json.parents;
-			// 		var selector;
-			// 		itemsWithTag.forEach(function(itemId){
-			// 			selector += '[data-itemid=' + itemId;
-			// 			selector += '],';
-			// 		});
-			// 		$('li:not(' + selector + ')').css('opacity','0.5');
-			// 	}
-			// });
+			selectedTagIds.push(tagId);
+
+			// Get selected tags
+			console.log(selectedTagIds);
+			redrawTreeWithNewTag(selectedTagIds);
 		} else {
 			$(this).removeClass('highlight');
-
+			var index = selectedTagIds.indexOf(tagId);
+			if (index > -1) {
+				selectedTagIds.splice(index,1);
+			}
+			console.log(selectedTagIds);
+			redrawTreeWithNewTag(selectedTagIds);
 		}
 		
 	});
+
+	var redrawTreeWithNewTag = function(selectedTagIds){
+		if (selectedTagIds.length !== 0){
+			$.ajax({
+				method: "GET",
+				url: "/get_item_from_tag",
+				// contentType: "application/json; charset=utf-8",
+	            // dataType: 'json',
+	            data: {
+	            	tag_ids: selectedTagIds
+	            },
+				success: function(html){
+					console.log(html);
+				// 	itemsWithTag = json.items_with_tag;
+				// 	parents = json.parents;
+				// 	var selector;
+				// 	itemsWithTag.forEach(function(itemId){
+				// 		selector += '[data-itemid=' + itemId;
+				// 		selector += '],';
+				// 	});
+				// 	$('li:not(' + selector + ')').css('opacity','0.5');
+				}
+			});
+		}
+	};
 
 	// Helper functions for Zooming tool
 	var isNumber = function(n) {
