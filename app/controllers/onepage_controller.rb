@@ -193,8 +193,8 @@ class OnepageController < ApplicationController
 		tag_id = params[:tag_id]
 		item_id = params[:item_id]
 		if Tag.exists?(tag_id) && Item.exists?(item_id)
+			item = Item.find(item_id) 
 			assoc = item.tag.delete(tag_id)
-			assoc.save
 			head 200, content_type: "text/html"
 		else
 			render plain: "Tag or item does not exists", :status => 200, :content_type => 'text/html'
@@ -205,39 +205,52 @@ class OnepageController < ApplicationController
 		tagIds = params[:tag_ids]
 		# render partial: 'treeWithTag', locals: { tagIds: tagIds }
 		html = ''
-		tagsFound = []
+		itemsFound = []
+		itemsWithSelectedTags = []
+		Tag.find(tagIds).each do |tag|
+			itemsWithSelectedTags += tag.item.ids
+		end
+		
+		p itemsWithSelectedTags
 		rootChildren = Item.where(parent_id: [nil, 0]).order(order_index: :asc)
 		goDeeper = 1
-
 		rootChildren.each do |item|
-			html += renderTreeWithTag(tagIds, tagsFound, goDeeper, item, 0)
+			if goDeeper == 1
+				# Ruby does not have pass by reference so we return 2 values
+				htmlToAdd, goDeeper = renderTreeWithTag(itemsWithSelectedTags, itemsFound, goDeeper, item, 0)
+				html += htmlToAdd
+			end
 		end
-		p html
 		render plain: html, :status => 200, :content_type => 'text/html'
 	end
 
-	def renderTreeWithTag(tagIds, tagsFound, goDeeper, item, parentId)	
-		if item.id.in?(tagIds)
-			tagsFound.push(item.id.to_s)
-			goDeeper = (tagsFound.length == tagIds.length) ? 0:1
+	def renderTreeWithTag(itemsWithSelectedTags, itemsFound, goDeeper, item, parentId)
+		highlight = ""	
+		if itemsWithSelectedTags.include?(item.id)
+			itemsFound.push(item.id)
+			goDeeper = (itemsFound.length == itemsWithSelectedTags.length) ? 0:1
+			highlight = " selected-tag"
 		end
-		html = ''
-		html = html + '<li class="item" data-itemid="' + item.id.to_s + '" id="item_' + item.id.to_s + '" data-parentid="'+ parentId.to_s + '">'
+
+		html = '<li class="item" data-itemid="' + item.id.to_s + '" id="item_' + item.id.to_s + '" data-parentid="'+ parentId.to_s + '">'
 		html += '<i class="fa fa-bars mover" aria-hidden="true"></i>'
 		if item.hasChildren? && goDeeper
 			html = html + '<input type="checkbox" data-itemid="' + item.id.to_s + '" id="c' + item.id.to_s + '" checked="true"/>'
 			html = html + '<label class="expander" for="c' + item.id.to_s + '"></label>'
 		end
-		html = html + '<div class="tree_label item-name" data-parentid="' + parentId.to_s + '" data-itemid="' + item.id.to_s + '" data-name="name" contenteditable="true" id="item_' + item.id.to_s + '">' + item.name + '</div>'
+		html = html + '<div class="tree_label item-name' + highlight + '" data-parentid="' + parentId.to_s + '" data-itemid="' + item.id.to_s + '" data-name="name" contenteditable="true" id="item_' + item.id.to_s + '">' + item.name + '</div>'
 		html += '<ul class="children">'
+
 		if item.hasChildren? && goDeeper
 			children = item.getChildrenObject
 			children.each do |childItem|
-				renderTreeWithTag(tagIds, tagsFound, goDeeper, childItem, item.id)
+				htmlToAdd, goDeeper = renderTreeWithTag(itemsWithSelectedTags, itemsFound, goDeeper, childItem, item.id)
+				html += htmlToAdd
 			end
 		end
 		html += '</ul>'
 		html += '</li>'
-		return html
+
+		return html, goDeeper
 	end
 end

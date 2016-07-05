@@ -302,12 +302,17 @@ body{
 		*/
 
 		.tree_label {
-		  position: relative;
-		  display: inline-block;
-		  &:last-child:before{
-		  	border-bottom: 1px solid $tree-line-color;
-		  }
-		  	&.first-item-placeholder[contenteditable=true]:empty:before {
+			position: relative;
+			display: inline-block;
+			&.selected-tag {
+			    border-bottom: 4px solid rgba(233, 147, 73, 0.79);
+			    margin-bottom: -2px;
+			}
+
+			&:last-child:before{
+				border-bottom: 1px solid $tree-line-color;
+			}
+				&.first-item-placeholder[contenteditable=true]:empty:before {
 				content: attr(placeholder);
 				display: block; /* For Firefox */
 				font-weight: 300;
@@ -622,7 +627,6 @@ body{
 		margin-bottom: 0.5em;
 		cursor: pointer;
 		&.highlight,:hover {
-			background-color: #f44336;
 			color: #fff;
 			border: none;
 			&.delete{

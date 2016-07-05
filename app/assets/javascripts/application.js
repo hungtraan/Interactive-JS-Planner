@@ -23,15 +23,19 @@
 // Pros: fast to implement
 // Cons: Cache at runtime (into memory), loses cache on refresh
 // Future direction: Either local storage, InnoDB, app cache,  (even service worker?)
-localCacheTree = {};
-localCacheDetail = {};
-localCacheTags = {};
+var localCacheTree = {};
+var localCacheDetail = {};
+var localCacheTags = {};
+var localCacheTagTree = {};
 
 $(document).ready(function() {
 	var loader = $('.loader');
 	$('#fontSize').on('input', function(){ 
 	  	setFontSize($(this)); 
 	});
+
+	// Save original tree in case later on user change it to view tags/filters
+	var originalTreeHtml = $('.root > ul.children').html();
 
 	// $(this).toggleClass("textedit moveitem");
 	var firstLocationRemembered = 0;
@@ -711,25 +715,34 @@ $(document).ready(function() {
 		var tagId = parseInt($(this).attr('data-tagid'));
 		if (!$(this).hasClass('highlight')){
 			$(this).addClass('highlight delete');
-			selectedTagIds.push(tagId);
-
-			// Get selected tags
-			console.log(selectedTagIds);
-			redrawTreeWithNewTag(selectedTagIds);
+			selectedTagIds.push(tagId);			
 		} else {
 			$(this).removeClass('highlight');
 			var index = selectedTagIds.indexOf(tagId);
 			if (index > -1) {
 				selectedTagIds.splice(index,1);
 			}
-			console.log(selectedTagIds);
-			redrawTreeWithNewTag(selectedTagIds);
 		}
-		
+
+		if (selectedTagIds.length !== 0){
+			loader.addClass('enabled'); // Hide loader
+			redrawTreeWithNewTag(selectedTagIds);
+		} else {
+			$('.root > ul.children').html(originalTreeHtml);
+		}
 	});
 
+	// Redraw $('.root > ul.children') with new tree including only
+	// items with selected tags
 	var redrawTreeWithNewTag = function(selectedTagIds){
-		if (selectedTagIds.length !== 0){
+		// Create a hash for the selection
+		var hash = selectedTagIds.sort().toString(); // simple hash function
+
+		if (localCacheTagTree[hash] !== undefined){
+			loader.removeClass('enabled'); // Hide loader
+			$('.root > ul.children').html(localCacheTagTree[hash]);
+		}
+		else{
 			$.ajax({
 				method: "GET",
 				url: "/get_item_from_tag",
@@ -739,15 +752,9 @@ $(document).ready(function() {
 	            	tag_ids: selectedTagIds
 	            },
 				success: function(html){
-					console.log(html);
-				// 	itemsWithTag = json.items_with_tag;
-				// 	parents = json.parents;
-				// 	var selector;
-				// 	itemsWithTag.forEach(function(itemId){
-				// 		selector += '[data-itemid=' + itemId;
-				// 		selector += '],';
-				// 	});
-				// 	$('li:not(' + selector + ')').css('opacity','0.5');
+					loader.removeClass('enabled'); // Hide loader
+					$('.root > ul.children').html(html);
+					localCacheTagTree[hash] = html;
 				}
 			});
 		}
@@ -782,7 +789,9 @@ var activateTags = function(){
 	});
 	$('.tags:not(.sidebar)').on('click','i.delete-tag', function(){
 		var tag_id = $(this).parent('.tag').attr('data-tagid');
-		if (tag_id !== undefined) deleteTag(tag_id);
+		var item_id = $(this).parent('.tag').parent('.tag-area').parent('.tags').attr('data-itemid');
+		console.log(item_id);
+		if (tag_id !== undefined && item_id !== undefined) deleteTag(tag_id, item_id);
 		$(this).parent('.tag').remove();
 	});
 
@@ -835,8 +844,9 @@ var createTag = function(item_id, text){
 		},
 		success: function(tag_id){
 			if (tag_id !== undefined){
-				$('.object-editor .tags tag:last-child').attr('data-tagid',tag_id);	
+				$('.object-editor .tags tag:last-child').attr('data-tagid',tag_id);
 			}
+			purgeTagCache(tag_id);
 		}
 	});
 };
@@ -848,6 +858,17 @@ var deleteTag = function(tag_id, item_id){
 		data: {
 			tag_id: tag_id,
 			item_id: item_id
+		}, 
+		success: function(){
+			purgeTagCache(tag_id);
+		}
+	});
+};
+
+var purgeTagCache = function(tag_id){
+	Object.keys(localCacheTagTree).forEach(function(key){
+		if (key.split(",").indexOf(tag_id) !== -1){
+			delete localCacheTagTree[key];
 		}
 	});
 };
