@@ -790,7 +790,6 @@ var activateTags = function(){
 	$('.tags:not(.sidebar)').on('click','i.delete-tag', function(){
 		var tag_id = $(this).parent('.tag').attr('data-tagid');
 		var item_id = $(this).parent('.tag').parent('.tag-area').parent('.tags').attr('data-itemid');
-		console.log(item_id);
 		if (tag_id !== undefined && item_id !== undefined) deleteTag(tag_id, item_id);
 		$(this).parent('.tag').remove();
 	});
@@ -825,8 +824,7 @@ var activateTags = function(){
         } else if (key === 8) { // Delete-Backspace key
             if ($(this).val() === '') {
             	var prevTag = $(this).prev('.tag-area').find('.tag:last-child');
-            	console.log(prevTag);
-                if (prevTag.length !== 0){
+            	if (prevTag.length !== 0){
                 	if (prevTag.hasClass('highlight delete')){
                 		prevTag.remove();
                 		var tag_id = prevTag.attr('data-tagid');
