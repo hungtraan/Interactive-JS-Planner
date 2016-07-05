@@ -824,15 +824,16 @@ var activateTags = function(){
             }
         } else if (key === 8) { // Delete-Backspace key
             if ($(this).val() === '') {
-            	var prevTag = $(this).prev('.tag');
+            	var prevTag = $(this).prev('.tag-area').find('.tag:last-child');
+            	console.log(prevTag);
                 if (prevTag.length !== 0){
-                	if (prevTag.hasClass('highlight')){
+                	if (prevTag.hasClass('highlight delete')){
                 		prevTag.remove();
                 		var tag_id = prevTag.attr('data-tagid');
-                		if (tag_id !== undefined) deleteTag(tag_id, prevTag.attr('data-itemid'));
+                		if (tag_id !== undefined) deleteTag(tag_id, $(this).parent('.tags').attr('data-itemid'));
                 	}
                 	else{
-                		prevTag.addClass('highlight');	
+                		prevTag.addClass('highlight delete');	
                 	}
                 }
             }
