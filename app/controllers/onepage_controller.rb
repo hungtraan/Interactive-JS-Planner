@@ -156,6 +156,18 @@ class OnepageController < ApplicationController
 		head 200, content_type: "text/html"
 	end
 
+	def getAllTags
+		allTagObjs = Tag.all
+		allTags = []
+		allTagObjs.each do |tag|
+			allTags.push(tag.tag)
+		end
+		respond_to do |format|
+			format.json {
+				render :json => allTags
+          }
+        end
+	end
 	def getTagsHtml
 		render partial: 'tag', locals: { itemId: params[:item_id], limit: params[:limit] }
 	end

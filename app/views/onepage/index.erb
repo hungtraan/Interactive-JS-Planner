@@ -32,7 +32,7 @@
 			<div class="tags sidebar">
 					<%= render partial: 'topTenTag',  locals: {limit: 10} %>
 					<% if @totalTagNum > 10 %>
-					<input class="tag-search" placeholder="Search <%= @totalTagNum %> available tags">
+					<input class="tag-search" data-provide="typeahead" placeholder="Search <%= @totalTagNum %> available tags">
 					<% end %>
 			</div>
 			<li class="sidebar-brand">
@@ -113,7 +113,7 @@
 						<span class="detail-title">Tags</span>
 						<div class='tags'>
 							<div class="tag-area"></div>
-							<input placeholder='Add tag' type='text'>
+							<input placeholder='Add tag' data-provide="typeahead" type='text'>
 						</div>
 					</div>
 				</div>

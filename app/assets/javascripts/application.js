@@ -794,6 +794,22 @@ var activateTags = function(){
 		if (tag_id !== undefined && item_id !== undefined) deleteTag(tag_id, item_id);
 		$(this).parent('.tag').remove();
 	});
+	var tagsAll = [];
+	$.ajax({
+		method: "GET",
+		url: "/get_all_tags",
+		success: function(tagArray){
+			// This is fine for now with small number of tags
+			// Future: Update this result array with every input key
+			tagsAll = tagArray;
+			$('.tags input').typeahead({
+				source: tagArray,
+				displayText: function(item){ 
+					return item;}
+			});
+		}
+	});
+	
 
 	$(document).on('keyup', '.tags input', function (e) {
 		var key = e.keyCode || e.which;
