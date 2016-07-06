@@ -109,15 +109,92 @@ body{
 	// 	margin-left: 5px;
 	// }
 
-	.project-title{
-	    font-size: 2em;
-    	margin-top: 1em;
+	.title-menu{
+		margin-top: 1em;
+		.project-title{
+		    font-size: 2em;
+		}
+		.dropdown{
+			text-align: right;
+			.dropdown-menu {
+				.this{
+					font-weight: bold;
+				}
+			}
+		}
+	}
+	
+	.tabs{
+		.sublime-tabs {
+			padding: 0;
+			margin: 0;
+			width: 100%;    
+			overflow: hidden;
+			margin-top: 10px;
+			margin-bottom: -0.5em;
+
+			
+			&__tab {
+				position: relative;
+				display: inline-block;
+				height: 29px;
+			    min-width: 20px;
+			    max-width: 200px;
+			    padding: 0 10px 0 10px;
+				z-index: 1;
+			    background: #c4c4c4;
+			    margin-left: -4px;
+				border-right: 1px solid #aaa;
+				box-shadow: 0px -1px 1px 0 #666;
+
+				&.active {
+					z-index: 2;
+				    border-bottom: 1px solid rgb(233, 147, 73);
+				    background: rgb(245, 245, 245);
+					&:before, &:after {
+					    background: inherit;
+					}
+				}
+
+				&:hover{
+					background: rgb(220, 220, 220);
+					border-bottom: 1px solid rgb(233, 147, 73);
+				}
+
+				i{
+					font-size: 0.8em;
+					&:hover{
+						cursor: pointer;
+						color: #555;
+					}
+				}
+
+		}
+
+
+		&__link,
+		&__link:visited {
+			font-size: 12px;
+			color: #111;
+			text-decoration: none;
+		    margin-top: 5px;
+
+			display: inline-block;
+			position: relative;
+			line-height: 20px;
+
+			&:hover {
+				color: #555;
+			}
+			}
+		}
 	}
 
 	.card {
 		background-color: #fff;
 	    box-shadow: 0px 2px 2px 2px #e1e1e1;
 	    padding: 15px 25px 15px 25px;
+    	margin: 0.5em 0 0.5em 0;
      //    margin: 10px;
 	}
 
@@ -185,9 +262,10 @@ body{
 
 	.new-tree {
 		min-height: 200px;
-		body {
-		  margin: 30px;
-		  font-family: sans-serif;
+		display: none;
+		
+		&.active{
+			display: block;
 		}
 
 		#fontSizeWrapper {

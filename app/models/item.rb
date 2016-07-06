@@ -3,8 +3,10 @@ class Item < ActiveRecord::Base
 	# Refer to: http://cobwwweb.com/a-has-many-relationship-within-a-single-model-in-rails
 	has_many :children, :class_name => "Item", :foreign_key => "parent_id"
 	belongs_to :parent, :class_name => "Item"
-	has_and_belongs_to_many :tag
+	belongs_to :project
+	has_and_belongs_to_many :tags
 	validates :name, presence: true, length: { minimum: 1, maximum: 255  }
+	validates :project, presence: true
 	
 	def parentName
 	  # it may not have a parent

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160630210119) do
+ActiveRecord::Schema.define(version: 20160705181254) do
 
   create_table "items", force: :cascade do |t|
     t.string   "name",        limit: 255
@@ -24,11 +24,22 @@ ActiveRecord::Schema.define(version: 20160630210119) do
     t.integer  "parent_id",   limit: 4
     t.float    "order_index", limit: 24
     t.integer  "expanded",    limit: 1
+    t.integer  "project_id",  limit: 4
   end
+
+  add_index "items", ["project_id"], name: "index_items_on_project_id", using: :btree
 
   create_table "items_tags", id: false, force: :cascade do |t|
     t.integer "item_id", limit: 4, null: false
     t.integer "tag_id",  limit: 4, null: false
+  end
+
+  create_table "projects", force: :cascade do |t|
+    t.string   "name",       limit: 255
+    t.integer  "owner",      limit: 4
+    t.datetime "created_at",             null: false
+    t.datetime "updated_at",             null: false
+    t.integer  "active",     limit: 1
   end
 
   create_table "tags", force: :cascade do |t|
@@ -37,4 +48,5 @@ ActiveRecord::Schema.define(version: 20160630210119) do
     t.datetime "updated_at",             null: false
   end
 
+  add_foreign_key "items", "projects"
 end

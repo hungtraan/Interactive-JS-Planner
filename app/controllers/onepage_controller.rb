@@ -3,8 +3,14 @@ require 'json'
 class OnepageController < ApplicationController
 
 	def index
-		@itemsWithNoParent = Item.where(parent_id: [nil, 0]).order(order_index: :asc)
-		@totalTagNum = Tag.count
+		# 1. Get user
+
+		# 2. Get active projects to render
+		@project = Project.where(active: 1).order('updated_at desc').first()
+		@allProjects = Project.all.order('updated_at desc')
+		# add later: Display many tabs with active projects from last visit
+		@itemsWithNoParent = Item.where(project: @project, parent_id: [nil, 0]).order(order_index: :asc)
+		@totalTagNum = Tag.count # To change: Only tags of display project
 	end
 
 	def getChildren
@@ -55,7 +61,7 @@ class OnepageController < ApplicationController
 
 	def createItem
 		itemName = params[:item_name]
-
+		projectId = params[:project_id]
 		# Calculate order index, only within its parent
 		# prevId and nextId is passed from js, so it's already inside the parent
 		prevId = params[:prev_item_id]
@@ -68,11 +74,11 @@ class OnepageController < ApplicationController
 			parentId = params[:parent_id]
 			if Item.exists?(parentId) && parentId
 				parentName = Item.find(parentId).name
-				newItem = Item.new(:name => itemName, :parent_id => parentId, :parent_name => parentName, :order_index => orderIndex)
+				newItem = Item.new(:name => itemName, :parent_id => parentId, :parent_name => parentName, :order_index => orderIndex, :project => projectId)
 				newItem.save
 			end
 		else
-			newItem = Item.new(:name => itemName, :order_index => orderIndex)
+			newItem = Item.new(:name => itemName, :order_index => orderIndex, :project => projectId)
 			newItem.save
 		end
 		respond_to do |format|

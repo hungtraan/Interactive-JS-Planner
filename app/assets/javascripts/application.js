@@ -30,9 +30,6 @@ var localCacheTagTree = {};
 
 $(document).ready(function() {
 	var loader = $('.loader');
-	$('#fontSize').on('input', function(){ 
-	  	setFontSize($(this)); 
-	});
 
 	// Save original tree in case later on user change it to view tags/filters
 	var originalTreeHtml = $('.root > ul.children').html();
@@ -760,21 +757,39 @@ $(document).ready(function() {
 		}
 	};
 
-	// Helper functions for Zooming tool
-	var isNumber = function(n) {
-		return !isNaN(parseFloat(n)) && isFinite(n);
-	};
 
-	var setFontSize = function(el) {
-		var fontSize = el.val();
+	// Tabs
+	var tabApp = tabApp || {};
+				
+	tabApp.tabify = function() {
 
-		if ( isNumber(fontSize) && fontSize >= 0.5 ) {
-			$('.tree').css({ fontSize: fontSize + 'em' });
-		} else if ( fontSize ) {
-			el.val('1');
-			$('.tree').css({ fontSize: '1em' });  
-		}
+		var activeClass = "active",
+			$tabs = $(".sublime-tabs__tab"),
+			$links = $(".sublime-tabs__link"),
+			$projects = $(".new-tree");
+
+		$tabs.on("click",function(e){
+			var project_id = $(this).find(".sublime-tabs__link").attr("data-project-id");
+			var $selectedTab = $(this),
+				$selectedProject = $projects.filter("[data-project-id="+ project_id +"]");
+			
+			// reverse the z-order
+			$tabs.each( function(k,v) {
+				$(v).css("z-index", $tabs.length - k);
+			})
+			.removeClass( activeClass );
+
+			$selectedTab.addClass( activeClass )
+			.css("z-index", $tabs.length + 1 );
+
+			$projects.removeClass( activeClass );
+
+			$selectedProject.addClass( activeClass );
+		});
+		
 	};
+	
+	tabApp.tabify();
    
 	// END HELPER FUNCTIONS ==============================================
 });
