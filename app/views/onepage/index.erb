@@ -78,18 +78,13 @@
 			</div>
 			<div class="row tabs">
 				<ul class="sublime-tabs">
-			      <li class="sublime-tabs__tab active">
-			        <a href="#" class="sublime-tabs__link" data-type="html" data-project-id="<%= @project.id %>"><%= @project.name %></a>
-			        <i class="fa fa-times delete-tag" aria-hidden="true"></i>
-			      </li>
-			      <li class="sublime-tabs__tab">
-			        <a href="#" class="sublime-tabs__link" data-project-id="<%= @project.id+10 %>">main.js</a>
-			        <i class="fa fa-times delete-tag" aria-hidden="true"></i>
-			      </li>
-
-				<li class="sublime-tabs__tab">
-			        <a href="#" class="sublime-tabs__link add-new""><i class="fa fa-plus" aria-hidden="true"></i></a>
-			      </li>
+					<li class="sublime-tabs__tab active" data-project-id="<%= @project.id %>">
+						<a href="#" class="sublime-tabs__link" data-type="html"><%= @project.name %></a>
+						<i class="fa fa-times delete-tag" aria-hidden="true"></i>
+					</li>
+					<li class="sublime-tabs__tab new-tab">
+				        <a href="#" class="sublime-tabs__link"><i class="fa fa-plus" aria-hidden="true"></i></a>
+			      	</li>
 			    </ul>
 			</div>
 
@@ -102,7 +97,7 @@
 								<% if @itemsWithNoParent.length != 0 %> 
 									<%= render 'item', itemId: 0 %>
 								<% else %>
-									<li class="item" id="item_<%= item.id %>">
+									<li class="item" id="item_">
 										<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>
 									</li>
 								<% end %>
@@ -110,22 +105,7 @@
 						</li>
 					</ul>
 				</div>
-				<!-- <div class="new-tree tree card col-md-12" data-project-id="<%= @project.id+10 %>">				
-					<ul class="tree" id="sortable">
-						<li class="item root" data-itemid="0" id="0">
-							<div class="root-fake-handler"></div>
-							<ul class="children">
-								<% if @itemsWithNoParent.length != 0 %> 
-									<%= render 'item', itemId: 0 %>
-								<% else %>
-									<li class="item" id="item_<%= item.id %>">
-										<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>
-									</li>
-								<% end %>
-							</ul>
-						</li>
-					</ul>
-				</div> -->
+				
 				<div class="object-editor closed card col-md-5">
 					<div class="close-sign">
 						<i class="fa fa-times-circle" aria-hidden="true"></i>

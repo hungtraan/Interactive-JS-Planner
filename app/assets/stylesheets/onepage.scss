@@ -160,11 +160,13 @@ body{
 					background: rgb(220, 220, 220);
 					border-bottom: 1px solid rgb(233, 147, 73);
 				}
-
+				&.new-tab{
+					cursor: pointer;
+				}
 				i{
 					font-size: 0.8em;
+					cursor: pointer;
 					&:hover{
-						cursor: pointer;
 						color: #555;
 					}
 				}

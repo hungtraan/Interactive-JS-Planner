@@ -442,17 +442,20 @@ $(document).ready(function() {
     	var newItemId = null;
 
     	// get prev & next item's ordering
-    	var prevItem = element.parent('li').prev('li');
-    	var nextItem = element.parent('li').next('li');
-		var prevItemId = (prevItem.length === 0) ? null:prevItem.attr('data-itemid');
-    	var nextItemId = (nextItem.length === 0) ? null:nextItem.attr('data-itemid');
-    	if (parent_id === '0'){parent_id=''};
+    	var prevItem = element.parent('li').prev('li'),
+    		nextItem = element.parent('li').next('li'),
+			prevItemId = (prevItem.length === 0) ? null:prevItem.attr('data-itemid'),
+    		nextItemId = (nextItem.length === 0) ? null:nextItem.attr('data-itemid'),
+    		projectId = element.parents('div.tree.active').attr('data-project-id');
+    	console.log("Huh,", projectId);
+    	if (parent_id === '0'){parent_id='';}
     	$.ajax({
     		data: {
     			item_name: name,
     			parent_id: parent_id, 
     			prev_item_id: prevItemId,
     			next_item_id: nextItemId,
+    			project_id: projectId,
     		},
     		url: "/create_item",
     		method: "POST",
@@ -762,14 +765,19 @@ $(document).ready(function() {
 	var tabApp = tabApp || {};
 				
 	tabApp.tabify = function() {
-
 		var activeClass = "active",
-			$tabs = $(".sublime-tabs__tab"),
-			$links = $(".sublime-tabs__link"),
-			$projects = $(".new-tree");
-
+			$tabs = $('.sublime-tabs__tab:not(.new-tab)'),
+			$links = $('.sublime-tabs__link'),
+			$projects = $('.new-tree'),
+			$closeBtn = $('.sublime-tabs__tab i.close-tab'),
+			$newTab = $('.new-tab');
+		if ($tabs.length === 1){
+			$closeBtn.hide();
+		} else {
+			$closeBtn.show();
+		}
 		$tabs.on("click",function(e){
-			var project_id = $(this).find(".sublime-tabs__link").attr("data-project-id");
+			var project_id = $(this).attr("data-project-id");
 			var $selectedTab = $(this),
 				$selectedProject = $projects.filter("[data-project-id="+ project_id +"]");
 			
@@ -777,16 +785,54 @@ $(document).ready(function() {
 			$tabs.each( function(k,v) {
 				$(v).css("z-index", $tabs.length - k);
 			})
-			.removeClass( activeClass );
+			.removeClass(activeClass);
 
-			$selectedTab.addClass( activeClass )
+			$selectedTab.addClass(activeClass)
 			.css("z-index", $tabs.length + 1 );
 
-			$projects.removeClass( activeClass );
+			$projects.removeClass(activeClass);
+			$selectedProject.addClass(activeClass);
+			e.stopImmediatePropagation();
+		});
 
-			$selectedProject.addClass( activeClass );
+		$newTab.on('click', function(e){
+			var activeProjectId = $('.sublime-tabs__tab.active').attr('data-project-id'),
+				$thisTree = $('.tree[data-project-id=' + activeProjectId + ']');
+			$('.sublime-tabs__tab.active').removeClass(activeClass);
+			$thisTree.removeClass(activeClass);
+			var newTabHtml = "<li class=\"sublime-tabs__tab active\">\
+			        <a href=\"#\" class=\"sublime-tabs__link\" data-project-id=\"\">untitled</a>\
+			        <i class=\"fa fa-times close-tab\" aria-hidden=\"true\"></i>\
+			      </li>";
+			$(this).before(newTabHtml);
+			$tabs = $('.sublime-tabs__tab:not(.new-tab)'); // refresh tab list
+			var $newTree = $('.tree[data-project-id=' + activeProjectId + ']').clone();
+			$newTree.find('li.root > ul.children').empty();
+			$newTree.addClass(activeClass);
+			$newTree.attr('data-project-id',999);
+
+			$newTree.find('ul.children').append('\
+				<li class="item" id="item_">\
+					<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>\
+				</li>');
+			$thisTree.after($newTree);
+			$newlyCreatedItem = $newTree.find('div.tree_label');
+			focusContentEditable($newlyCreatedItem);
+			tabApp.tabify(); // make new tab clickable
+			e.stopImmediatePropagation(); // prevent event bubbling due to previous tabify() call
 		});
 		
+		$closeBtn.on('click', function(){
+			var $thisTab = $(this).parent('.sublime-tabs__tab');
+			var activeProjectId =  $thisTab.attr('data-project-id');
+			$('.tree[data-project-id=' + activeProjectId + ']').remove();
+			if ($thisTab.hasClass(activeClass)){ // if close an active tab
+				$thisTab.prev().addClass(activeClass); // then display its prev tab
+				var prevProjectId = $thisTab.prev().attr('data-project-id');
+				$('.tree[data-project-id=' + prevProjectId + ']').addClass(activeClass);
+			}
+			$thisTab.remove();
+		});
 	};
 	
 	tabApp.tabify();

@@ -62,23 +62,24 @@ class OnepageController < ApplicationController
 	def createItem
 		itemName = params[:item_name]
 		projectId = params[:project_id]
+		parentId = params[:parent_id]
 		# Calculate order index, only within its parent
 		# prevId and nextId is passed from js, so it's already inside the parent
 		prevId = params[:prev_item_id]
 		nextId = params[:next_item_id]
-		prevItem = (Item.exists?(prevId) && prevId != '')? Item.find(params[:prev_item_id]): nil
-		nextItem = (Item.exists?(nextId) && nextId != '')? Item.find(params[:next_item_id]): nil
+		prevItem = (prevId != '' && Item.exists?(prevId))? Item.find(params[:prev_item_id]): nil
+		nextItem = (nextId != '' && Item.exists?(nextId))? Item.find(params[:next_item_id]): nil
 		orderIndex = self.calculateOrder(prevItem, nextItem)
+		project = Project.find(projectId)
 
-		if params[:parent_id] != ''
-			parentId = params[:parent_id]
+		if parentId != '' && parentId != nil
 			if Item.exists?(parentId) && parentId
 				parentName = Item.find(parentId).name
-				newItem = Item.new(:name => itemName, :parent_id => parentId, :parent_name => parentName, :order_index => orderIndex, :project => projectId)
+				newItem = Item.new(:name => itemName, :parent_id => parentId, :parent_name => parentName, :order_index => orderIndex, :project => project)
 				newItem.save
 			end
 		else
-			newItem = Item.new(:name => itemName, :order_index => orderIndex, :project => projectId)
+			newItem = Item.new(:name => itemName, :order_index => orderIndex, :project => project)
 			newItem.save
 		end
 		respond_to do |format|
@@ -197,7 +198,7 @@ class OnepageController < ApplicationController
 			if Item.exists?(item_id)
 				item = Item.find(item_id)
 				newTag = Tag.create(tag: tag_name)
-				item.tag << newTag
+				item.tags << newTag
 				newTag.save
 				item.save
 				render plain: newTag.id, :status => 200, :content_type => 'text/html'
@@ -212,7 +213,7 @@ class OnepageController < ApplicationController
 		item_id = params[:item_id]
 		if Tag.exists?(tag_id) && Item.exists?(item_id)
 			item = Item.find(item_id) 
-			assoc = item.tag.delete(tag_id)
+			assoc = item.tags.delete(tag_id)
 			head 200, content_type: "text/html"
 		else
 			render plain: "Tag or item does not exists", :status => 200, :content_type => 'text/html'

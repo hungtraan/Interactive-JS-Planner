@@ -1,5 +1,5 @@
 <% 
-tags = Tag.joins(:item).group('tag_id').order('count_tag desc').count('tag').first(limit)
+tags = Tag.joins(:items).group('tag_id').order('count_tag desc').count('tag').first(limit)
 # SELECT COUNT(`tags`.`tag`) AS count_tag, tag_id AS tag_id FROM `tags` INNER JOIN `items_tags` ON `items_tags`.`tag_id` = `tags`.`id` INNER JOIN `items` ON `items`.`id` = `items_tags`.`item_id` GROUP BY tag_id  ORDER BY count_tag desc
 
 tags.each do |tag|
