@@ -26,16 +26,13 @@
 			<li class="sidebar-brand">
 				<h4>Tags</h4>
 			</li>
-			<!-- <li class="tags">
-				<a href="#">Dummy tag</a>
-			</li> -->
 			<div class="tags sidebar">
 					<%= render partial: 'topTenTag',  locals: {limit: 10} %>
 					<% if @totalTagNum > 10 %>
 					<input class="tag-search" data-provide="typeahead" placeholder="Search <%= @totalTagNum %> available tags">
 					<% end %>
 			</div>
-			<li class="sidebar-brand">
+			<!-- <li class="sidebar-brand">
 				<h4>Filters</h4>
 			</li>
 			
@@ -50,7 +47,7 @@
 			</li>
 			<li class="filters">
 				<a href="#">Dummy</a>
-			</li>
+			</li> -->
 		</ul>
 	</div>
 	<!-- /#sidebar-wrapper -->
@@ -59,29 +56,43 @@
 	<div id="page-content-wrapper">
 		<div class="container-fluid">
 			<div class="row title-menu">
-				<div class="project-title col-sm-8" contenteditable="true"><%= @project.name %></div>
+				<div class="project-title col-sm-8" contenteditable="true" data-project-id="<%= @project.id %>" data-project-name="<%= @project.name %>"><%= @project.name %></div>
 				<div class="dropdown col-sm-4">
 					<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
 						Projects
 						<span class="caret"></span>
 					</button>
 					<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu1">
-						<% @allProjects.each do |project| 
-							this = (project.id == @project.id) ? "disabled" : ""
-							%>
-							<li class="project-dropdown-item <%= this %>"><a href="#"><%= project.name %></a></li>
+						<% @allProjects.each do |project| %>
+							<li class="project-dropdown-item" data-project-id="<%= project.id %>"><a href="#"><%= project.name %></a></li>
+						<% end %>
+						<% if @allProjects.length == 0 %>
+							<li class="project-dropdown-item">No project to show</li>
 						<% end %>
 						<li role="separator" class="divider"></li>
-						<li class="project-dropdown-item add-new"><a href="#">Add new</a></li>
+						<li class="project-dropdown-item new-tab"><a href="#">Add new</a></li>
 					</ul>
 				</div>
 			</div>
 			<div class="row tabs">
 				<ul class="sublime-tabs">
-					<li class="sublime-tabs__tab active" data-project-id="<%= @project.id %>">
-						<a href="#" class="sublime-tabs__link" data-type="html"><%= @project.name %></a>
-						<i class="fa fa-times delete-tag" aria-hidden="true"></i>
-					</li>
+					<% if @activeProjects.length != 0
+						@activeProjects.each do |project| %>
+						<li class="sublime-tabs__tab" data-project-id="<%= project.id %>">
+							<a href="#" class="sublime-tabs__link"><%= project.name %></a>
+							<i class="fa fa-times close-tab" aria-hidden="true"></i>
+						</li>
+						<% end %>
+					<% else
+						# If no active (opened) projects, display the first in all projects
+						name = (@allProjects.length != 0 ) ? @allProjects.first().name : ''
+						%>
+						<li class="sublime-tabs__tab" data-project-id>
+							<a href="#" class="sublime-tabs__link"><%= name %></a>
+							<i class="fa fa-times close-tab" aria-hidden="true"></i>
+						</li>
+					<% end %>
+					
 					<li class="sublime-tabs__tab new-tab">
 				        <a href="#" class="sublime-tabs__link"><i class="fa fa-plus" aria-hidden="true"></i></a>
 			      	</li>
@@ -89,22 +100,55 @@
 			</div>
 
 			<div class="row tree-container">
-				<div class="new-tree active tree card col-md-12" data-project-id="<%= @project.id %>">		
-					<ul class="tree" id="sortable">
-						<li class="item root" data-itemid="0" id="0">
-							<div class="root-fake-handler"></div>
-							<ul class="children">
-								<% if @itemsWithNoParent.length != 0 %> 
-									<%= render 'item', itemId: 0 %>
-								<% else %>
+				<% 
+				if @activeProjects.length != 0 
+					@activeProjects.each do |project| 
+						itemsWithNoParent = Item.where(project: project).where(parent_id: [nil, 0]).order(order_index: :asc)
+					%>
+					<div class="new-tree tree card col-md-12" data-project-id="<%= project.id %>">		
+						<ul class="tree" id="sortable">
+							<li class="item root" data-itemid="0" id="0">
+								<div class="root-fake-handler"></div>
+								<ul class="children">
+									<% if itemsWithNoParent.length != 0 %> 
+										<%= render partial: 'item', locals:{ itemId: 0, project: project } %>
+									<% else %>
+										<li class="item" id="item_">
+											<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>
+										</li>
+									<% end %>
+								</ul>
+							</li>
+						</ul>
+					</div>
+					<% end %>
+				<% 
+				else 
+					if @allProjects.length != 0 
+						project = @allProjects.first()
+						project.touch
+						itemsWithNoParent = Item.where(project: project).where(parent_id: [nil, 0]).order(order_index: :asc)
+					%>
+					<div class="new-tree tree card col-md-12" data-project-id>		
+						<ul class="tree" id="sortable">
+							<li class="item root" data-itemid="0" id="0">
+								<div class="root-fake-handler"></div>
+								<ul class="children">
 									<li class="item" id="item_">
-										<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>
+										<% if itemsWithNoParent && project %> 
+											<%= render partial: 'item', locals:{ itemId: 0, project: project } %>
+										<% else %>
+											<li class="item" id="item_">
+												<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>
+											</li>
+										<% end %>
 									</li>
-								<% end %>
-							</ul>
-						</li>
-					</ul>
-				</div>
+								</ul>
+							</li>
+						</ul>
+					</div>
+					<% end %>
+				<% end %>
 				
 				<div class="object-editor closed card col-md-5">
 					<div class="close-sign">

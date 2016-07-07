@@ -1,5 +1,6 @@
 <% 
-children = (itemId != 0) ? Item.find(itemId).getChildrenObject : Item.where(parent_id: [nil, 0]).order(order_index: :asc)
+# projectRender = (project) ? project : nil
+children = (itemId != 0) ? Item.find(itemId).getChildrenObject : Item.where(project: project).where(parent_id: [nil, 0]).order(order_index: :asc)
 children.each do |item| %>
 	<li class="item" data-itemid="<%= item.id %>" id="item_<%= item.id %>" data-parentid="<%= itemId %>">
 	<i class="fa fa-bars mover" aria-hidden="true"></i>

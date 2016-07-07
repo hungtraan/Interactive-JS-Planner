@@ -17,7 +17,9 @@ Rails.application.routes.draw do
   match 'update_expand_collapse' => 'onepage#expandToggle', via: :post
   match 'create_tag' => 'onepage#createTag', via: :post
   match 'delete_tag' => 'onepage#deleteTag', via: :post
-
+  match 'create_project' => 'onepage#createProject', via: :post
+  match 'update_project' => 'onepage#updateProject', via: :post
+  match 'delete_project' => 'onepage#deleteProject', via: :post
   # You can have the root of your site routed with "root"
   # root 'welcome#index'
 

@@ -447,7 +447,7 @@ $(document).ready(function() {
 			prevItemId = (prevItem.length === 0) ? null:prevItem.attr('data-itemid'),
     		nextItemId = (nextItem.length === 0) ? null:nextItem.attr('data-itemid'),
     		projectId = element.parents('div.tree.active').attr('data-project-id');
-    	console.log("Huh,", projectId);
+    	
     	if (parent_id === '0'){parent_id='';}
     	$.ajax({
     		data: {
@@ -624,7 +624,7 @@ $(document).ready(function() {
 	var expandBranch = function(element){
 		var toPrepend = $(element).siblings('ul.children');
 		if (toPrepend.length === 0){
-			$(element).parent().append('<ul class="children"></ul>')
+			$(element).parent().append('<ul class="children"></ul>');
 		}
 		toPrepend = $(element).siblings('ul.children');
 		if(toPrepend.text().trim() === ''){ // Only fill in if the branch has not been filled
@@ -763,26 +763,93 @@ $(document).ready(function() {
 
 	// Tabs
 	var tabApp = tabApp || {};
-				
-	tabApp.tabify = function() {
+
+	tabApp.activeProjects = {};
+
+	tabApp.highlightFirstTab = function(){
 		var activeClass = "active",
 			$tabs = $('.sublime-tabs__tab:not(.new-tab)'),
+			$projects = $('div.tree');
+		$tabs.first().addClass(activeClass);
+		$projects.first().addClass(activeClass);
+	};
+				
+	tabApp.titleFocusOut = function(e){
+		$('.project-title').focusout(function(){
+			var $title = $('.project-title'),
+				projectName = $title.text(),
+				dataId = $title.attr('data-project-id'),
+				dataName = $title.attr('data-project-name');
+			// Create new project
+			if (dataId === undefined){
+				if (projectName.length !== 0){
+					$.ajax({
+						method: "POST",
+						url: "/create_project",
+						data: {
+							project_name: projectName 
+						},
+						success: function(json){
+							$title.attr('data-project-id', json.id);
+							$title.attr('data-project-name', json.name);
+						}
+					});
+				}
+			}
+			// Modify one
+			else {
+				if (projectName !== dataName){
+					$.ajax({
+						method: "POST",
+						url: "/update_project",
+						data: { 
+							project_name: projectName,
+							project_id: dataId
+						},
+						success: function(json){
+							$title.attr('data-project-name', json.name);
+						}
+					});
+				}
+			}
+		});
+	};
+
+	tabApp.tabify = function() {
+		var activeClass = 'active',
+			$tabs = $('.sublime-tabs__tab:not(.new-tab)'),
 			$links = $('.sublime-tabs__link'),
-			$projects = $('.new-tree'),
+			$projects = $('div.tree'),
 			$closeBtn = $('.sublime-tabs__tab i.close-tab'),
-			$newTab = $('.new-tab');
-		if ($tabs.length === 1){
-			$closeBtn.hide();
-		} else {
-			$closeBtn.show();
-		}
-		$tabs.on("click",function(e){
-			var project_id = $(this).attr("data-project-id");
+			$newTab = $('.new-tab'),
+			$newTabTab = $('.sublime-tabs__tab.new-tab'),
+			$pageArea = $('.page-content-wrapper'),
+			$dropdownItem = $('.project-dropdown-item');
+
+		$tabs.each( function(k, v) {
+			var $thisTab = $(v),
+				projectId = $thisTab.attr('data-project-id');
+			tabApp.activeProjects[projectId] = $thisTab;	
+		});
+		console.log(tabApp.activeProjects);
+		
+		$dropdownItem.on('click', 'li', function(e){
+			var projectId = $(this).attr('data-project-id');
+			if (tabApp.activeProjects[projectId] !== undefined){
+				// This project is opened, switch to it
+			}
+			else {
+				// This project is not opened, open it as a new tab
+			}
+		});
+		$tabs.on('click', function(e){
+			var projectId = $(this).attr('data-project-id'),
+				projectName = $(this).text().trim();
 			var $selectedTab = $(this),
-				$selectedProject = $projects.filter("[data-project-id="+ project_id +"]");
+				$selectedProject = $projects.filter('[data-project-id=' + projectId + ']');
 			
 			// reverse the z-order
-			$tabs.each( function(k,v) {
+			$tabs.each( function(k, v) {
 				$(v).css("z-index", $tabs.length - k);
 			})
 			.removeClass(activeClass);
@@ -792,50 +859,98 @@ $(document).ready(function() {
 
 			$projects.removeClass(activeClass);
 			$selectedProject.addClass(activeClass);
+			$('.project-title').text(projectName);
+			$('.project-title').attr('data-project-id', projectId);
+			$('.project-title').attr('data-project-name', projectName);
 			e.stopImmediatePropagation();
+
+			// Update the updated_at (to be sorted by)
+			$.ajax({
+				method: "POST",
+				url: "/update_project",
+				data: { 
+					project_id: projectId,
+					switched: 1
+				},
+			});
 		});
 
 		$newTab.on('click', function(e){
-			var activeProjectId = $('.sublime-tabs__tab.active').attr('data-project-id'),
-				$thisTree = $('.tree[data-project-id=' + activeProjectId + ']');
-			$('.sublime-tabs__tab.active').removeClass(activeClass);
-			$thisTree.removeClass(activeClass);
+			if ($(this).hasClass('project-dropdown-item')){
+				$('.dropdown-toggle').dropdown('toggle');
+			}
+
+			// Remove highlight from current tab			
+			$tabs.each( function(k, v) {
+				$(v).css("z-index", $tabs.length - k);
+			})
+			.removeClass(activeClass);
+			$projects = $('div.tree'); // refresh
+			$projects.removeClass(activeClass);
+
+			// Add new tab
 			var newTabHtml = "<li class=\"sublime-tabs__tab active\">\
-			        <a href=\"#\" class=\"sublime-tabs__link\" data-project-id=\"\">untitled</a>\
+			        <a href=\"#\" class=\"sublime-tabs__link\" data-project-id=\"\">Untitled</a>\
 			        <i class=\"fa fa-times close-tab\" aria-hidden=\"true\"></i>\
 			      </li>";
-			$(this).before(newTabHtml);
+			$newTabTab.before(newTabHtml);
 			$tabs = $('.sublime-tabs__tab:not(.new-tab)'); // refresh tab list
-			var $newTree = $('.tree[data-project-id=' + activeProjectId + ']').clone();
-			$newTree.find('li.root > ul.children').empty();
-			$newTree.addClass(activeClass);
-			$newTree.attr('data-project-id',999);
 
+			// Create new tree (tab content)
+			var $newTree = $('.tree').first().clone();
+			$newTree.find('li.root > ul.children').empty();
+			$newTree.addClass(activeClass).css("z-index", $tabs.length + 2 );
+			
 			$newTree.find('ul.children').append('\
 				<li class="item" id="item_">\
 					<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>\
 				</li>');
-			$thisTree.after($newTree);
+
+			// Add new tree (tab content)
+			$projects.last().after($newTree);
 			$newlyCreatedItem = $newTree.find('div.tree_label');
 			focusContentEditable($newlyCreatedItem);
 			tabApp.tabify(); // make new tab clickable
 			e.stopImmediatePropagation(); // prevent event bubbling due to previous tabify() call
+			tabApp.titleFocusOut();
+			$('.project-title')
+				.text('')
+				.attr('data-project-id', null)
+				.focus();
 		});
 		
 		$closeBtn.on('click', function(){
+			if ($tabs.length == 1){
+				$('sublime-tabs__tab new-tab').trigger('click');
+			}
 			var $thisTab = $(this).parent('.sublime-tabs__tab');
 			var activeProjectId =  $thisTab.attr('data-project-id');
 			$('.tree[data-project-id=' + activeProjectId + ']').remove();
 			if ($thisTab.hasClass(activeClass)){ // if close an active tab
-				$thisTab.prev().addClass(activeClass); // then display its prev tab
-				var prevProjectId = $thisTab.prev().attr('data-project-id');
-				$('.tree[data-project-id=' + prevProjectId + ']').addClass(activeClass);
+				if ($thisTab.prev().length !== 0){
+					$triggerTab = $thisTab.prev(); // then display its prev tab
+				} else if ($thisTab.next().length !== 0){
+					$triggerTab = $thisTab.next(); // then display its prev tab
+				}
+				$triggerTab.addClass(activeClass);
+				var triggerProjectId = $triggerTab.attr('data-project-id');
+				$('.tree[data-project-id=' + triggerProjectId + ']').addClass(activeClass);
 			}
+			$.ajax({
+				method: "POST",
+				url: "/update_project",
+				data: { 
+					project_id: activeProjectId,
+					active: 0
+				},
+			});
 			$thisTab.remove();
 		});
 	};
-	
+
+	tabApp.highlightFirstTab();
 	tabApp.tabify();
+	tabApp.titleFocusOut();
    
 	// END HELPER FUNCTIONS ==============================================
 });

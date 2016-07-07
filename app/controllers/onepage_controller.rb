@@ -6,10 +6,10 @@ class OnepageController < ApplicationController
 		# 1. Get user
 
 		# 2. Get active projects to render
-		@project = Project.where(active: 1).order('updated_at desc').first()
-		@allProjects = Project.all.order('updated_at desc')
+		@activeProjects = Project.where(active: 1).order('updated_at desc').first(5)
+		@project = @activeProjects.first()
+		@allProjects = Project.all
 		# add later: Display many tabs with active projects from last visit
-		@itemsWithNoParent = Item.where(project: @project, parent_id: [nil, 0]).order(order_index: :asc)
 		@totalTagNum = Tag.count # To change: Only tags of display project
 	end
 
@@ -133,7 +133,6 @@ class OnepageController < ApplicationController
 		itemId = params[:item_id]
 		if itemId != nil || itemId != ''
 			if Item.exists?(itemId)
-				puts itemId
 				Item.destroy(itemId)
 			end
 		end
@@ -271,5 +270,53 @@ class OnepageController < ApplicationController
 		html += '</li>'
 
 		return html, goDeeper
+	end
+
+	def createProject
+		projectName = params[:project_name]
+		project = Project.new(:name => projectName, :active => 1)
+		project.save
+		respond_to do |format|
+			format.json {
+				render :json => project
+          }
+        end
+	end
+
+	def updateProject
+		projectName = params[:project_name]
+		projectId = params[:project_id]
+		close = params[:active]
+		switched = params[:switched]
+		if Project.exists?(projectId)
+			project = Project.find(projectId)
+			if projectName
+				project.name = projectName
+			end
+			if close == '0'
+				project.active = 0
+			end
+			if switched
+				project.touch # update updated_at to current time
+			end
+			project.save
+
+			respond_to do |format|
+				format.json {
+					render :json => project
+	          }
+	        end
+		end
+	end
+
+	def deleteProject
+		projectId = params[:project_id]
+		
+		if Project.exists?(projectId)
+			Project.destroy(projectId)
+			render plain: "Project deleted", :status => 200, :content_type => 'text/html'
+		else
+			render plain: "Project does not exists", :status => 200, :content_type => 'text/html'
+		end
 	end
 end
