@@ -190,7 +190,6 @@ $(document).ready(function() {
 	});
 	
 	$('.item').on('focus','.item-name',function(e){
-		console.log("on('focus')");
 		var element = $(this);
 		focusContentEditable(element);
 	});
@@ -238,14 +237,12 @@ $(document).ready(function() {
 		element.focusout(function(event){
 			event.stopImmediatePropagation(); // This is VERY important: prevent event bubbling
 			var contentText = element.text();
-			console.log('out', element);
 
 			// When focus out (move on to a new line, clicking out of editable area)
 			// If old content to new content --> update item
 			// If blank content to new content --> create item
 			// If totally blank item --> delete item
 			if (element.hasClass('tree_label')){
-				console.log("here");
 				if (originalDetail === '' && contentText !== originalDetail && $.trim(contentText) !== ''){ // trim trailing spaces before comparison
 					var newItemName = contentText;
 					originalDetail = newItemName;
@@ -289,7 +286,6 @@ $(document).ready(function() {
 		});
 
 		element.keydown(function(event){
-			console.log('keydown');
 			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
 			var el = event.target,
 				input = el.nodeName != 'INPUT' && el.nodeName != 'TEXTAREA';
