@@ -6,6 +6,11 @@ class OnepageController < ApplicationController
 		# 1. Get user
 
 		# 2. Get active projects to render
+		if Project.count == 0
+			project = Project.new(:name => 'First project', :active => 1)
+			project.save
+		end
+
 		@activeProjects = Project.where(active: 1).order('updated_at desc').first(5)
 		
 		@allProjects = Project.all
