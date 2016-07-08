@@ -123,7 +123,6 @@ class OnepageController < ApplicationController
 		nextItem = (nextId != '' && Item.exists?(nextId))? Item.find(params[:next_item_id]): nil
 		orderIndex = self.calculateOrder(prevItem, nextItem)
 
-		# TO-DO: Actually updating order index of items
 		item = Item.find(itemId)
 		item.order_index = orderIndex
 		item.save
@@ -134,7 +133,11 @@ class OnepageController < ApplicationController
 		itemId = params[:item_id]
 		if itemId != nil || itemId != ''
 			if Item.exists?(itemId)
+				children = Item.find(itemId).children # also delete children
 				Item.destroy(itemId)
+				children.each do |item|
+					Item.destroy(item.id)
+				end
 			end
 		end
 		head 200, content_type: "text/html"
@@ -252,13 +255,13 @@ class OnepageController < ApplicationController
 			highlight = " selected-tag"
 		end
 
-		html = '<li class="item" data-itemid="' + item.id.to_s + '" id="item_' + item.id.to_s + '" data-parentid="'+ parentId.to_s + '">'
+		html = '<li class="item" data-item-id="' + item.id.to_s + '" id="item_' + item.id.to_s + '" data-parent-id="'+ parentId.to_s + '">'
 		html += '<i class="fa fa-bars mover" aria-hidden="true"></i>'
 		if item.hasChildren? && goDeeper
-			html = html + '<input type="checkbox" data-itemid="' + item.id.to_s + '" id="c' + item.id.to_s + '" checked="true"/>'
+			html = html + '<input type="checkbox" data-item-id="' + item.id.to_s + '" id="c' + item.id.to_s + '" checked="true"/>'
 			html = html + '<label class="expander" for="c' + item.id.to_s + '"></label>'
 		end
-		html = html + '<div class="tree_label item-name' + highlight + '" data-parentid="' + parentId.to_s + '" data-itemid="' + item.id.to_s + '" data-name="name" contenteditable="true" id="item_' + item.id.to_s + '">' + item.name + '</div>'
+		html = html + '<div class="tree_label item-name' + highlight + '" data-parent-id="' + parentId.to_s + '" data-item-id="' + item.id.to_s + '" data-name="name" contenteditable="true" id="item_' + item.id.to_s + '">' + item.name + '</div>'
 		html += '<ul class="children">'
 
 		if item.hasChildren? && goDeeper

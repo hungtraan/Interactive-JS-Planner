@@ -39,14 +39,14 @@ $(document).ready(function() {
 	var originalSerialized = '';
 	var serialized = '';
 	
-	/* EVENT HANDLERS */
+	/* EVENT HANDLERS ==================================== */
 
 	// Click on a parent item on the breadcrumb will be similar to
 	// clicking on the parent item in the tree
 	$('ul.breadcrumb-onepage').on('click', 'a.parents',function(e){
 		e.preventDefault();
-		var itemToFocus = $(this).attr('data-itemid');
-		$('div.tree_label[data-itemid="' + itemToFocus + '"]').click();
+		var itemToFocus = $(this).attr('data-item-id');
+		$('div.tree_label[data-item-id="' + itemToFocus + '"]').click();
 	});
 
 	$('.object-editor').on('click', '.close-sign',function(){
@@ -54,6 +54,7 @@ $(document).ready(function() {
 		$('.object-editor').addClass('closed');
 		// $('.object-editor').toggleClass('col-md-5');
 		$('.object-editor').removeClass('is-open');
+		$('div.tree_label').removeClass('selected');
 	});
 
 
@@ -83,13 +84,13 @@ $(document).ready(function() {
 				if (itemToMove.offset() !== oldPos){
 					// 1. Reorder the items within its parent
 					reorder(itemToMove);
-					var newParentId = itemToMove.parent('ul').parent('li').attr('data-itemid');
+					var newParentId = itemToMove.parent('ul').parent('li').attr('data-item-id');
 					var possibleParent = itemToMove.parent('ul').parent('li');
 					if (newParentId != oldParentId){
 						// 2. Update children parent relationship
-						setChildrenParent(itemToMove.attr('data-itemid'), newParentId);
+						setChildrenParent(itemToMove.attr('data-item-id'), newParentId);
 						if (possibleParent.children('label.expander').length === 0){
-							var toPrepend = '<input type="checkbox" data-itemid="' + newParentId + '" id="c' + newParentId + '"><label class="expander" for="c'+newParentId+'"></label>';
+							var toPrepend = '<input type="checkbox" data-item-id="' + newParentId + '" id="c' + newParentId + '"><label class="expander" for="c'+newParentId+'"></label>';
 							$(toPrepend).prependTo(possibleParent);
 							possibleParent.children('input[type=checkbox]').prop('checked','true');
 						}
@@ -129,7 +130,7 @@ $(document).ready(function() {
 	$('.tree').on('click','.tree_label.item-name', function(event){
 		var editor = $('.object-editor');
 		if(!$(this).hasClass('selected')){
-			var item_id = $(this).attr('data-itemid');
+			var item_id = $(this).attr('data-item-id');
 			if (item_id === '' || item_id === undefined) {return;}
 			if(!editor.hasClass('is-open')){
 				// $('.object-tree, .new-tree').toggleClass('col-md-12 col-md-6');
@@ -144,12 +145,42 @@ $(document).ready(function() {
 		// event.stopImmediatePropagation();
 	});
 
+	// Delete item when click on the delete button
+	$('.object-editor')
+	.on('click', 'i.delete-item-icon', function(){
+		$(this).hide();
+		$('.object-editor .confirm-delete-item,.yes-delete,.no-delete').show();
+
+		var itemId = $(this).attr('data-item-id');
+		var $liItem = $('li.item[data-item-id=' + itemId + ']');
+		if ($liItem.children('label.expander').length !== 0){ // has children
+			$('.object-editor .confirm-delete-item').text('This item has children item(s). Are you sure?');
+		} else {
+			$('.object-editor .confirm-delete-item').text('Confirm delete?');
+		}
+	})
+	.on('click', '.yes-delete', function(){
+		var itemId = $(this).attr('data-item-id');
+		deleteItem(itemId);
+		$('i.delete-item-icon').hide();
+		$('.object-editor .confirm-delete-item,.yes-delete,.no-delete').hide();
+		$('.object-editor').addClass('closed');
+
+		// Remove item from tree
+		var $liItem = $('li.item[data-item-id=' + itemId + ']');
+		$liItem.remove();
+	})
+	.on('click', '.no-delete', function(){
+		$('.object-editor .confirm-delete-item,.yes-delete,.no-delete').hide();
+		$('i.delete-item-icon').show();
+	});
+
 	// Expand and get children via AJAX
 	$(document).on('change','li.item > input[type=checkbox]', function(){
 		if (!this.checked) { // Collapse
 			$(this).siblings('div.tree_label').removeClass('expanded');
 			$(this).parent('li').removeClass('expanded');
-			expandToggle($(this).parent('li').attr('data-itemid'), 0);
+			expandToggle($(this).parent('li').attr('data-item-id'), 0);
 			// Note: (Future direction) Move to save expand-collapse state every 30s/60s instead of save on change to save number of requests to server
 			return;
 		}
@@ -159,6 +190,7 @@ $(document).ready(function() {
 	});
 	
 	$('.item').on('focus','.item-name',function(e){
+		console.log("on('focus')");
 		var element = $(this);
 		focusContentEditable(element);
 	});
@@ -187,25 +219,24 @@ $(document).ready(function() {
 		});
 		itemToMove = $(this).parent('li');
 		oldPos = itemToMove.offset();
-		oldParentId = itemToMove.parent('ul').parent('li').attr('data-itemid');
+		oldParentId = itemToMove.parent('ul').parent('li').attr('data-item-id');
 		
 	}).on('mouseup', function(e){
 		$('.tree').unbind('mouseover');
 	});
-
-	/* END EVENT HANDLERS */
 
 	/* Live ajax save with HTML5 contenteditable
 	 * $('span[contenteditable=true]').focus() would not work
 	 * since it does not recognize newly inserted elements
 	 */
 	var focusContentEditable = function(element){
+		console.log("Init on", element);
 		var originalDetail = element.text();
 		
 		element.focusout(function(event){
 			event.stopImmediatePropagation(); // This is VERY important: prevent event bubbling
 			var contentText = element.text();
-			// console.log('out', element);
+			console.log('out', element);
 
 			// When focus out (move on to a new line, clicking out of editable area)
 			// If old content to new content --> update item
@@ -216,33 +247,33 @@ $(document).ready(function() {
 					var newItemName = contentText;
 					originalDetail = newItemName;
 
-					var newItemParentId = element.parent('li').parent('ul').parent('li').attr('data-itemid');
+					var newItemParentId = element.parent('li').parent('ul').parent('li').attr('data-item-id');
 					if (newItemParentId === 0){newItemParentId = null;}
 					createItem(element, newItemName, newItemParentId);
 					return;
 				}
-				else if ((element.attr('data-itemid') !== undefined && element.attr('data-itemid') !== '') && (contentText === '' || contentText === null)){ 
+				else if ((element.attr('data-item-id') !== undefined && element.attr('data-item-id') !== '') && (contentText === '' || contentText === null)){ 
 					// Remove if content is blank, but only for those with itemid
 					// i.e. not a new line
 					
 					if (element.siblings('label.expander').length !== 0){
 						confirmDelete = function(){
 							$(element).parent().remove();
-							deleteItem(element);
+							deleteItem(element.attr('data-item-id'));
 						};
 						$( "#dialog-confirm" ).dialog("open");
 					}
 					else {
 						$(element).parent().remove();
-						deleteItem(element);
+						deleteItem(element.attr('data-item-id'));
 					}
 					return;
 				}
 
-				// When current item's data-parentid is different from its real parent in the DOM, update relationship
-				var possibleParentId = element.parent('li').parent('ul').parent('li').attr('data-itemid');
-				if (element.attr('data-parentid') !== undefined && possibleParentId !== undefined && element.attr('data-parentid') !== possibleParentId){
-					setChildrenParent(element.attr('data-itemid'), possibleParentId);
+				// When current item's data-parent-id is different from its real parent in the DOM, update relationship
+				var possibleParentId = element.parent('li').parent('ul').parent('li').attr('data-item-id');
+				if (element.attr('data-parent-id') !== undefined && possibleParentId !== undefined && element.attr('data-parent-id') !== possibleParentId){
+					setChildrenParent(element.attr('data-item-id'), possibleParentId);
 				}
 			}
 			
@@ -255,6 +286,7 @@ $(document).ready(function() {
 		});
 
 		element.keydown(function(event){
+			console.log('keydown');
 			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
 			var el = event.target,
 				input = el.nodeName != 'INPUT' && el.nodeName != 'TEXTAREA';
@@ -271,9 +303,9 @@ $(document).ready(function() {
 					if (treeElement.hasClass('root')){ return; }
 
 					var thisItem_li = element.parent('li'),
-						itemId = thisItem_li.attr('data-itemid');
+						itemId = thisItem_li.attr('data-item-id');
 					var parentItem = thisItem_li.parent('ul').parent('li'),
-						parentId = parentItem.parent('ul').parent('li').attr('data-itemid');
+						parentId = parentItem.parent('ul').parent('li').attr('data-item-id');
 					
 					// 1. Remove expander & parent's subtree if if the element is the only child
 					if (element.parent().siblings().length === 0){
@@ -301,8 +333,8 @@ $(document).ready(function() {
 					var prevItem = element.parent('li').prev('li');
 					if (prevItem.length === 0){ return; } 
 
-					var itemId = element.attr('data-itemid');
-					var parentId = prevItem.attr('data-itemid');
+					var itemId = element.attr('data-item-id');
+					var parentId = prevItem.attr('data-item-id');
 
 					// Expand the tree if prev item has children
 					if (prevItem.children('input[type=checkbox]').length){
@@ -315,19 +347,19 @@ $(document).ready(function() {
 					
 					// Expand the tree
 					if (prevItem.children('label.expander').length === 0){
-						var toPrepend = '<input type="checkbox" data-itemid="' + parentId + '" id="c' + parentId + '"><label class="expander" for="c'+parentId+'"></label>';
+						var toPrepend = '<input type="checkbox" data-item-id="' + parentId + '" id="c' + parentId + '"><label class="expander" for="c'+parentId+'"></label>';
 						$(toPrepend).prependTo(prevItem);
 					}
 					element.parent().parent().siblings('input[type=checkbox]').prop('checked','true');
 
 					
 					if (element.text() !== ''){ // new, type in then tab
-						parentId = element.parent('li').parent('ul').parent('li').attr('data-itemid');
+						parentId = element.parent('li').parent('ul').parent('li').attr('data-item-id');
 					}
 
 					// Update relationship
-					// For newly created item: Right here data-itemid will be blank since the newly created item has not been updated by createItem() function yet due to delay of xhf response
-					if (element.attr('data-itemid') != undefined && element.attr('data-itemid') != ''){
+					// For newly created item: Right here data-item-id will be blank since the newly created item has not been updated by createItem() function yet due to delay of xhf response
+					if (element.attr('data-item-id') != undefined && element.attr('data-item-id') != ''){
 						setChildrenParent(itemId, parentId);
 						loadDetail(element,false); // false = purge cache, get new info
 					} else { // new item being tabbed after typing
@@ -421,7 +453,7 @@ $(document).ready(function() {
 							} 
 							if (element.hasClass('tree_label')){
 								// 2. Create new item below it
-								var newItemHtml = "<li class=\"item\" data-itemid=\"\" id=\"\"><i class=\"fa fa-bars mover ui-sortable-handle\" aria-hidden=\"true\"></i><div class=\"tree_label item-name\" data-itemid=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
+								var newItemHtml = "<li class=\"item\" data-item-id=\"\" id=\"\"><i class=\"fa fa-bars mover ui-sortable-handle\" aria-hidden=\"true\"></i><div class=\"tree_label item-name\" data-item-id=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
 								$(newItemHtml).insertAfter(element.parent());
 								var newlyCreatedItem = element.parent().next().children('div.tree_label');
 								newlyCreatedItem.focus();
@@ -436,7 +468,7 @@ $(document).ready(function() {
 		});
 	};
 
-
+	/* END EVENT HANDLERS */
 	
 	// BEGIN HELPER FUNCTIONS ==============================================
 	// Create item function
@@ -447,8 +479,8 @@ $(document).ready(function() {
     	// get prev & next item's ordering
     	var prevItem = element.parent('li').prev('li'),
     		nextItem = element.parent('li').next('li'),
-			prevItemId = (prevItem.length === 0) ? null:prevItem.attr('data-itemid'),
-    		nextItemId = (nextItem.length === 0) ? null:nextItem.attr('data-itemid'),
+			prevItemId = (prevItem.length === 0) ? null:prevItem.attr('data-item-id'),
+    		nextItemId = (nextItem.length === 0) ? null:nextItem.attr('data-item-id'),
     		projectId = element.parents('div.tree.active').attr('data-project-id');
     	
     	if (parent_id === '0'){parent_id='';}
@@ -465,10 +497,10 @@ $(document).ready(function() {
     		success: function(json){
     			if (json){
     				newItemId = json.id;
-    				$(element).parent().attr('data-itemid',newItemId);
-    				$(element).parent().attr('data-parentid', parent_id);
-    				$(element).attr('data-itemid',newItemId);
-    				$(element).attr('data-parentid',parent_id);
+    				$(element).parent().attr('data-item-id',newItemId);
+    				$(element).parent().attr('data-parent-id', parent_id);
+    				$(element).attr('data-item-id',newItemId);
+    				$(element).attr('data-parent-id',parent_id);
     				$(element).attr('id','item_'+newItemId);
     			}
     		}
@@ -480,7 +512,7 @@ $(document).ready(function() {
     // ajax get details of the item and insert into object viewer
     var loadDetail = function(element, useCache=true) {
     	var data;
-    	var item_id = element.attr('data-itemid');
+    	var item_id = element.attr('data-item-id');
     	if (item_id === undefined) {return;}
     	if (localCacheTree[item_id] && useCache && localCacheTags[item_id]){
 			loader.removeClass('enabled'); // Hide loader
@@ -526,23 +558,24 @@ $(document).ready(function() {
     var showDetailOnSide = function(data, item_id){
     	var object = data[0];
     	var parents = data[1];
+    	$('.object-editor .yes-delete,.delete-item-icon').attr('data-item-id',object.id);
     	$('.object-editor span.item-id').html(object.id);
 		$('.object-editor span.item-name').html(object.name);
 		$('.object-editor span.item-parent').html(object.parent_name);
 		$('.object-editor span.item-desc').html(object.description);
 		$('.object-editor span.item-by').html(object.by_name);
 
-		$('.object-editor span.item-id').attr('data-itemid', item_id);
-		$('.object-editor span.item-name').attr('data-itemid', item_id);
-		$('.object-editor span.item-parent').attr('data-itemid', item_id);
-		$('.object-editor span.item-desc').attr('data-itemid', item_id);
-		$('.object-editor span.item-by').attr('data-itemid', item_id);
-		$('.object-editor div.tag-area div.tags').attr('data-itemid',object.id);
+		$('.object-editor span.item-id').attr('data-item-id', item_id);
+		$('.object-editor span.item-name').attr('data-item-id', item_id);
+		$('.object-editor span.item-parent').attr('data-item-id', item_id);
+		$('.object-editor span.item-desc').attr('data-item-id', item_id);
+		$('.object-editor span.item-by').attr('data-item-id', item_id);
+		$('.object-editor div.tag-area div.tags').attr('data-item-id',object.id);
 
 		var breadcrumb_li = "";
 		var parents_li = "<li><a class=\"parents\" href=\"#\"";
 		parents.forEach(function(item){
-			breadcrumb_li += parents_li + "data-itemid=\"" + item.id + "\">" + item.name + "</a></li>";
+			breadcrumb_li += parents_li + "data-item-id=\"" + item.id + "\">" + item.name + "</a></li>";
 		});
 		var thisItem_li = "<li class=\"selected\">" + object.name + "</li>";
 		$('.breadcrumb-onepage').html("");
@@ -556,7 +589,7 @@ $(document).ready(function() {
 	// post ajax update from this (innerhtml) text to server
 	var updateItem = function(element){
 		var data = {};
-		var itemId = $(element).attr('data-itemid');
+		var itemId = $(element).attr('data-item-id');
 		// If there is an itemId, this is an item already created
 		// so update its information
 		if (itemId){
@@ -573,7 +606,7 @@ $(document).ready(function() {
 
 		// if name, also update name in DOM tree
 		if (data.detail == 'name'){
-			var selector = 'div.tree_label[data-itemid='+itemId+']';
+			var selector = 'div.tree_label[data-item-id='+itemId+']';
 			$(selector).text(data.value);
 		}
 		// Purge cache after update
@@ -582,11 +615,11 @@ $(document).ready(function() {
 	};
 
 	// Delete item
-	// @input jquery element of an item
+	// @input jquery element of an item (.div.item-name)
 	// post ajax request to server, server will handle deletion validation
-	var deleteItem = function(element){
+	var deleteItem = function(itemId){
 		var data = {};
-		var itemId = $(element).attr('data-itemid');
+		// var itemId = $(element).attr('data-item-id');
 		
 		// If there is an itemId, this is an item already created
 		// so update its information
@@ -617,7 +650,7 @@ $(document).ready(function() {
 				item_id: parseInt(child_id),
 			},
 			success: function(){
-				$('#item_'.child_id).attr('data-parentid',parent_id);
+				$('#item_'.child_id).attr('data-parent-id',parent_id);
 			}
 		});
 	};
@@ -631,7 +664,7 @@ $(document).ready(function() {
 		}
 		toPrepend = $(element).siblings('ul.children');
 		if(toPrepend.text().trim() === ''){ // Only fill in if the branch has not been filled
-			var item_id = $(element).attr('data-itemid');
+			var item_id = $(element).attr('data-item-id');
 			var data;
 
 			if (localCacheDetail[item_id]){
@@ -657,12 +690,12 @@ $(document).ready(function() {
 				        	// To-do: Refactor code to render this from partial _item
 
 				        	// @input: an input[type=checkbox] element
-				        	var thisItemId = $(element).attr('data-itemid');
+				        	var thisItemId = $(element).attr('data-item-id');
 				        	data.forEach(function(item){
-				        		children_html += "<li class=\"item\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"item_" + item.id + "\"><i class=\"fa fa-bars mover\" aria-hidden=\"true\"></i>";
-				        		children_html += (item.has_children)? "<input type=\"checkbox\" data-itemid=\"" + item.id + "\" data-parentid=\"" + thisItemId +  "\" id=\"c" + item.id + "\"><label class=\"expander\" for=\"c" + item.id + "\"></label>":"";
+				        		children_html += "<li class=\"item\" data-item-id=\"" + item.id + "\" data-parent-id=\"" + thisItemId +  "\" id=\"item_" + item.id + "\"><i class=\"fa fa-bars mover\" aria-hidden=\"true\"></i>";
+				        		children_html += (item.has_children)? "<input type=\"checkbox\" data-item-id=\"" + item.id + "\" data-parent-id=\"" + thisItemId +  "\" id=\"c" + item.id + "\"><label class=\"expander\" for=\"c" + item.id + "\"></label>":"";
 								children_html += 
-										"<div class=\"tree_label item-name\" data-itemid=\"" + item.id + "\" data-name=\"name\" data-parentid=\"" + thisItemId +  "\" contenteditable=\"true\">" + item.name + "</div>\
+										"<div class=\"tree_label item-name\" data-item-id=\"" + item.id + "\" data-name=\"name\" data-parent-id=\"" + thisItemId +  "\" contenteditable=\"true\">" + item.name + "</div>\
 										<ul class=\"children\"  id=\"sortable\"></ul>";
 				        		children_html+="</li>";
 					        });
@@ -693,12 +726,12 @@ $(document).ready(function() {
     // @input: li ement
 	var reorder = function(element){
     	// get prev & next item's ordering
-		var itemId = element.attr('data-itemid');
+		var itemId = element.attr('data-item-id');
 		var prevItem = element.prev('li');
 		var nextItem = element.next('li');
 		
-		var prevItemId = (prevItem.length === 0) ? null:prevItem.attr('data-itemid');
-    	var nextItemId = (nextItem.length === 0) ? null:nextItem.attr('data-itemid');
+		var prevItemId = (prevItem.length === 0) ? null:prevItem.attr('data-item-id');
+    	var nextItemId = (nextItem.length === 0) ? null:nextItem.attr('data-item-id');
 
     	$.ajax({
 			url: '/update_order_index',
@@ -788,7 +821,7 @@ $(document).ready(function() {
 				$project = $('div.tree.active'),
 				$dropdownItems = $('.project-dropdown-item:not(.new-tab)');
 			// Create new project
-			if (dataId === undefined){
+			if (dataId === undefined || dataId.indexOf('temp') !== -1){
 				if (projectName.length !== 0){
 					$.ajax({
 						method: "POST",
@@ -801,10 +834,12 @@ $(document).ready(function() {
 							var html = '<li class="project-dropdown-item" data-project-id="' + json.id + '"><a href="#">' + projectName + '</a></li>';
 							$dropdownItems.last().after(html);
 							tabApp.activeProjects[json.id] = $project;
+							$('.sublime-tabs__tab.active, div.tree.active').attr('data-project-id',json.id);
 						}
 					});
 					$title.attr('data-project-name', projectName);
 					$('.sublime-tabs__tab.active>a').text(projectName);
+					
 				}
 			}
 			// Modify one
@@ -894,7 +929,7 @@ $(document).ready(function() {
 			$projects.removeClass(activeClass);
 
 			// Add new tab
-			var newTabHtml = "<li class=\"sublime-tabs__tab active\">\
+			var newTabHtml = "<li class=\"sublime-tabs__tab active\" data-project-id='temp_" + ($tabs.length + 1000) + "'>\
 			        <a href=\"#\" class=\"sublime-tabs__link\">Untitled</a>\
 			        <i class=\"fa fa-times close-tab\" aria-hidden=\"true\"></i>\
 			      </li>";
@@ -905,7 +940,7 @@ $(document).ready(function() {
 			var $newTree = $('.tree').first().clone();
 			$newTree.find('li.root > ul.children').empty();
 			$newTree.addClass(activeClass).css("z-index", $tabs.length + 2 );
-			
+			$newTree.attr('data-project-id', "temp_" + ($tabs.length + 1000 - 1));
 			$newTree.find('ul.children').append('\
 				<li class="item">\
 					<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>\
@@ -922,7 +957,7 @@ $(document).ready(function() {
 			focusContentEditable($newlyCreatedItem);
 			dragnDrop();
 			tabApp.tabify(); // make new tab clickable
-			// e.stopImmediatePropagation(); // prevent event bubbling due to previous tabify() call
+			e.stopImmediatePropagation(); // prevent event bubbling due to previous tabify() call
 		});
 		
 		$closeBtn.on('click', function(){
@@ -938,9 +973,10 @@ $(document).ready(function() {
 				} else {
 					$triggerTab = $thisTab.next(); // then display its prev tab
 				}
-				$triggerTab.addClass(activeClass);
-				var triggerProjectId = $triggerTab.attr('data-project-id');
-				$('.tree[data-project-id=' + triggerProjectId + ']').addClass(activeClass);
+				$triggerTab.click();
+				// $triggerTab.addClass(activeClass);
+				// var triggerProjectId = $triggerTab.attr('data-project-id');
+				// $('.tree[data-project-id=' + triggerProjectId + ']').addClass(activeClass);
 			}
 			$.ajax({
 				method: "POST",
@@ -1053,7 +1089,7 @@ var activateTags = function(){
 	});
 	$('.tags:not(.sidebar)').on('click','i.delete-tag', function(){
 		var tag_id = $(this).parent('.tag').attr('data-tagid');
-		var item_id = $(this).parent('.tag').parent('.tag-area').parent('.tags').attr('data-itemid');
+		var item_id = $(this).parent('.tag').parent('.tag-area').parent('.tags').attr('data-item-id');
 		if (tag_id !== undefined && item_id !== undefined) deleteTag(tag_id, item_id);
 		$(this).parent('.tag').remove();
 	});
@@ -1080,7 +1116,7 @@ var activateTags = function(){
         	var text = $(this).val().replace(',', '');
         	if (text !== '') {
                 $('.tags input').before('<div class=\'tag\'>' + text + '<i class="fa fa-times delete-tag" aria-hidden="true"></i></div>');
-                var item_id = $(this).parent('.tags').attr('data-itemid');
+                var item_id = $(this).parent('.tags').attr('data-item-id');
 
                 createTag(item_id, text);
                 $(this).val(''); // empty input field
@@ -1092,7 +1128,7 @@ var activateTags = function(){
                 	if (prevTag.hasClass('highlight delete')){
                 		prevTag.remove();
                 		var tag_id = prevTag.attr('data-tagid');
-                		if (tag_id !== undefined) deleteTag(tag_id, $(this).parent('.tags').attr('data-itemid'));
+                		if (tag_id !== undefined) deleteTag(tag_id, $(this).parent('.tags').attr('data-item-id'));
                 	}
                 	else{
                 		prevTag.addClass('highlight delete');	

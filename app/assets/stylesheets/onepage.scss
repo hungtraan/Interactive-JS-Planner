@@ -263,7 +263,7 @@ body{
 	}
 
 	.new-tree {
-		min-height: 200px;
+		min-height: 300px;
 		display: none;
 		
 		&.active{
@@ -445,9 +445,9 @@ body{
 				border-radius: 0 .3em 0 0;
 				content: '';
 			}
-			&:focus:after{
-				height: 1.2em;
-			}
+			// &:focus:after{
+			// 	height: 1.2em;
+			// }
 		}
 
 		/* ————————————————————–
@@ -507,6 +507,24 @@ body{
 		&.closed{
 			display: none;
 		}
+		
+		.item-delete-dialog{
+			display: inline-block;
+    		float: right;
+    		cursor: pointer;
+    		
+    		.delete-item-icon, .yes-delete, .no-delete{
+				color: #777;
+				&:hover{
+					color: #111;
+				}
+			}
+    		
+			.confirm-delete-item, .yes-delete, .no-delete{
+				display: none;
+			}
+		}
+		
 		.close-sign{
 			cursor: pointer;
 		    position: absolute;

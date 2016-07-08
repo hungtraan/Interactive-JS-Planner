@@ -1,13 +1,13 @@
 <% 
 children = (itemId != 0) ? Item.find(itemId).getChildrenObject : Item.where(project: project).where(parent_id: [nil, 0]).order(order_index: :asc)
 children.each do |item| %>
-	<li class="item" data-itemid="<%= item.id %>" id="item_<%= item.id %>" data-parentid="<%= itemId %>">
+	<li class="item" data-item-id="<%= item.id %>" id="item_<%= item.id %>" data-parent-id="<%= itemId %>">
 	<i class="fa fa-bars mover" aria-hidden="true"></i>
 	<% if item.hasChildren? %>
-		<input type="checkbox" data-itemid="<%= item.id %>" id="c<%= item.id %>" <% if item.expanded? %>checked="true"<% end %>/>
+		<input type="checkbox" data-item-id="<%= item.id %>" id="c<%= item.id %>" <% if item.expanded? %>checked="true"<% end %>/>
 		<label class="expander" for="c<%= item.id %>"></label>
 	<% end %>
-	<div class="tree_label item-name" data-parentid="<%= itemId %>" data-itemid="<%= item.id %>" data-name="name" contenteditable="true" id="item_<%= item.id %>"><%= item.name %></div>
+	<div class="tree_label item-name" data-parent-id="<%= itemId %>" data-item-id="<%= item.id %>" data-name="name" contenteditable="true" id="item_<%= item.id %>"><%= item.name %></div>
 	<ul class="children">
 		<% if item.hasChildren? && item.expanded? %>
 			<%= render 'item', itemId: item.id %>
