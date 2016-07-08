@@ -952,27 +952,31 @@ $(document).ready(function() {
 
 			// Add new tree (tab content)
 			$projects.last().after($newTree);
-			$newlyCreatedItem = $newTree.find('div.tree_label');
+			$newlyCreatedItem = $newTree.find('.item_name');
 			$('.project-title')
 				.text('')
 				.attr('data-project-id', null)
 				.focus();
 			
+			// $newlyCreatedItem = $projects.last().find('div.tree_label');
+			console.log($newlyCreatedItem);
+			
 			focusContentEditable($newlyCreatedItem);
+			console.log($newlyCreatedItem);
 			dragnDrop();
 			tabApp.tabify(); // make new tab clickable
 			e.stopImmediatePropagation(); // prevent event bubbling due to previous tabify() call
 		});
 		
 		$closeBtn.on('click', function(){
-			if ($tabs.length == 1){
+			if ($tabs.length === 1){
 				$('sublime-tabs__tab new-tab').trigger('click');
 			}
 			var $thisTab = $(this).parent('.sublime-tabs__tab');
 			var activeProjectId =  $thisTab.attr('data-project-id');
 			$('.tree[data-project-id=' + activeProjectId + ']').remove();
 			if ($thisTab.hasClass(activeClass)){ // if close an active tab
-				if ($thisTab.next().length === 0){
+				if ($thisTab.next().hasClass('new-tab')){ // last tab on right
 					$triggerTab = $thisTab.prev(); // then display its prev tab
 				} else {
 					$triggerTab = $thisTab.next(); // then display its prev tab
@@ -1064,7 +1068,7 @@ $(document).ready(function() {
 						$newTabTab.before(newTabHtml);
 						// $tabs = $('.sublime-tabs__tab:not(.new-tab)'); // refresh tab list
 						$newlyCreatedItem = $projects.last().find('div.tree_label');
-
+						console.log($newlyCreatedItem);
 						focusContentEditable($newlyCreatedItem);
 						dragnDrop();
 						tabApp.tabify(); // make new tab clickable
