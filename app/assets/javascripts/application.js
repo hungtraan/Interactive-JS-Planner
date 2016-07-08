@@ -203,27 +203,30 @@ $(document).ready(function() {
 	// Hover with mousedown on a li element over 1500ms, expand branch
 	var itemToMove;
 	var oldPos, oldParentId;
-	$('.tree').on('mousedown', '.mover',function(e){
-		var delay=1500, setTimeoutConst;
-		$('.tree').on('mouseover','li.item:not(#0)',function(event){
-			var li_element = $(this);
-			if (li_element.children('input[type=checkbox]').length === 0){
-				return;
-			}
-			setTimeoutConst = setTimeout(function(e){
-				li_element.children('input[type=checkbox]').prop('checked',true).change();
-			}, delay);
-			event.stopImmediatePropagation();
-		}).on('mouseleave','li.item', function(event){
-			clearTimeout(setTimeoutConst);
+	var initRelocation = function(){
+		$('.tree').on('mousedown', '.mover',function(e){
+			var delay=1500, setTimeoutConst;
+			$('.tree').on('mouseover','li.item:not(#0)',function(event){
+				var li_element = $(this);
+				if (li_element.children('input[type=checkbox]').length === 0){
+					return;
+				}
+				setTimeoutConst = setTimeout(function(e){
+					li_element.children('input[type=checkbox]').prop('checked',true).change();
+				}, delay);
+				event.stopImmediatePropagation();
+			}).on('mouseleave','li.item', function(event){
+				clearTimeout(setTimeoutConst);
+			});
+			itemToMove = $(this).parent('li');
+			oldPos = itemToMove.offset();
+			oldParentId = itemToMove.parent('ul').parent('li').attr('data-item-id');
+			
+		}).on('mouseup', function(e){
+			$('.tree').unbind('mouseover');
 		});
-		itemToMove = $(this).parent('li');
-		oldPos = itemToMove.offset();
-		oldParentId = itemToMove.parent('ul').parent('li').attr('data-item-id');
-		
-	}).on('mouseup', function(e){
-		$('.tree').unbind('mouseover');
-	});
+	};
+	initRelocation();
 
 	/* Live ajax save with HTML5 contenteditable
 	 * $('span[contenteditable=true]').focus() would not work
@@ -808,6 +811,16 @@ $(document).ready(function() {
 
 	tabApp.activeProjects = {};
 
+	tabApp.reInitListeners = function(){
+		$('.item').on('focus','.item-name',function(){
+			var element = $(this);
+			focusContentEditable(element);
+		});
+		dragnDrop();
+		initRelocation();
+		tabApp.tabify(); // make new tab clickable
+	};
+
 	tabApp.highlightFirstTab = function(){
 		var activeClass = "active",
 			$tabs = $('.sublime-tabs__tab:not(.new-tab)'),
@@ -952,19 +965,12 @@ $(document).ready(function() {
 
 			// Add new tree (tab content)
 			$projects.last().after($newTree);
-			$newlyCreatedItem = $newTree.find('.item_name');
 			$('.project-title')
 				.text('')
 				.attr('data-project-id', null)
 				.focus();
 			
-			// $newlyCreatedItem = $projects.last().find('div.tree_label');
-			console.log($newlyCreatedItem);
-			
-			focusContentEditable($newlyCreatedItem);
-			console.log($newlyCreatedItem);
-			dragnDrop();
-			tabApp.tabify(); // make new tab clickable
+			tabApp.reInitListeners();
 			e.stopImmediatePropagation(); // prevent event bubbling due to previous tabify() call
 		});
 		
@@ -1044,11 +1050,13 @@ $(document).ready(function() {
 			}
 			else {
 				// This project is not opened, open it as a new tab
+				loader.addClass('enabled');
 				$.ajax({
 					method: "GET",
 					url: "/get_project_html",
 					data: { project_id: projectId },
 					success: function(html){
+						loader.removeClass('enabled');
 						$projects.last().after(html);
 						// Remove highlight from current tabs
 						$tabs = $('.sublime-tabs__tab:not(.new-tab)');
@@ -1067,11 +1075,8 @@ $(document).ready(function() {
 						      </li>";
 						$newTabTab.before(newTabHtml);
 						// $tabs = $('.sublime-tabs__tab:not(.new-tab)'); // refresh tab list
-						$newlyCreatedItem = $projects.last().find('div.tree_label');
-						console.log($newlyCreatedItem);
-						focusContentEditable($newlyCreatedItem);
-						dragnDrop();
-						tabApp.tabify(); // make new tab clickable
+						
+						tabApp.reInitListeners();
 						e.stopImmediatePropagation(); // prevent event bubbling due to previous tabify() call
 					}
 				});
