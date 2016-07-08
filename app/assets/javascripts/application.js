@@ -164,7 +164,7 @@ $(document).ready(function() {
 		deleteItem(itemId);
 		$('i.delete-item-icon').hide();
 		$('.object-editor .confirm-delete-item,.yes-delete,.no-delete').hide();
-		$('.object-editor').addClass('closed');
+		$('.object-editor').toggleClass('closed is-open');
 
 		// Remove item from tree
 		var $liItem = $('li.item[data-item-id=' + itemId + ']');
@@ -318,8 +318,11 @@ $(document).ready(function() {
 					
 					// 3. Update the item information
 					if (parentId === undefined) { parentId = null;}
-					setChildrenParent(itemId, parentId);
-					loadDetail(element,false); // false == purge cache, get new info
+					if (element.attr('data-item-id') !== undefined && element.attr('data-item-id') !== ''){
+						setChildrenParent(itemId, parentId);
+						loadDetail(element,false); // false == purge cache, get new info
+					}
+					
 					element.focus(); // Keep focus on the item after Shift + tab
 					focusContentEditable(element); // This line solved a bug: Cannot tab it after shift-tab on root level by putting focus again on this element
 				}
@@ -359,7 +362,7 @@ $(document).ready(function() {
 
 					// Update relationship
 					// For newly created item: Right here data-item-id will be blank since the newly created item has not been updated by createItem() function yet due to delay of xhf response
-					if (element.attr('data-item-id') != undefined && element.attr('data-item-id') != ''){
+					if (element.attr('data-item-id') !== undefined && element.attr('data-item-id') !== ''){
 						setChildrenParent(itemId, parentId);
 						loadDetail(element,false); // false = purge cache, get new info
 					} else { // new item being tabbed after typing
@@ -453,7 +456,7 @@ $(document).ready(function() {
 							} 
 							if (element.hasClass('tree_label')){
 								// 2. Create new item below it
-								var newItemHtml = "<li class=\"item\" data-item-id=\"\" id=\"\"><i class=\"fa fa-bars mover ui-sortable-handle\" aria-hidden=\"true\"></i><div class=\"tree_label item-name\" data-item-id=\"\" contenteditable=\"true\" data-name=\"name\"></div></li>";
+								var newItemHtml = "<li class=\"item\" data-item-id=\"\" id=\"\"><i class=\"fa fa-bars mover ui-sortable-handle\" aria-hidden=\"true\"></i><div class=\"tree_label item-name\" data-item-id=\"\" contenteditable=\"true\" data-name=\"name\"></div><ul class=\"children\"></ul></li>";
 								$(newItemHtml).insertAfter(element.parent());
 								var newlyCreatedItem = element.parent().next().children('div.tree_label');
 								newlyCreatedItem.focus();
@@ -514,7 +517,8 @@ $(document).ready(function() {
     	var data;
     	var item_id = element.attr('data-item-id');
     	if (item_id === undefined) {return;}
-    	if (localCacheTree[item_id] && useCache && localCacheTags[item_id]){
+    	
+    	if (useCache && localCacheTree[item_id] !== undefined && localCacheTags[item_id] !== undefined ){
 			loader.removeClass('enabled'); // Hide loader
 			data = localCacheTree[item_id];
 			showDetailOnSide(data, item_id);
@@ -547,7 +551,7 @@ $(document).ready(function() {
 	            },
 	            success: function(html) {
 	            	localCacheTags[item_id] = html;
-	            	if(data!==undefined){
+	            	if(html!==undefined){
 	            		$('.object-editor .tags > .tag-area').html(html);
 			        }
 	            }
