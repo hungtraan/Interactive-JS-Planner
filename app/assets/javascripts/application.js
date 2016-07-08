@@ -230,7 +230,6 @@ $(document).ready(function() {
 	 * since it does not recognize newly inserted elements
 	 */
 	var focusContentEditable = function(element){
-		console.log("Init on", element);
 		var originalDetail = element.text();
 		
 		element.focusout(function(event){
@@ -243,6 +242,7 @@ $(document).ready(function() {
 			// If blank content to new content --> create item
 			// If totally blank item --> delete item
 			if (element.hasClass('tree_label')){
+				console.log("here");
 				if (originalDetail === '' && contentText !== originalDetail && $.trim(contentText) !== ''){ // trim trailing spaces before comparison
 					var newItemName = contentText;
 					originalDetail = newItemName;

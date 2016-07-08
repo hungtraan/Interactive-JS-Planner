@@ -7,7 +7,7 @@ children.each do |item| %>
 		<input type="checkbox" data-item-id="<%= item.id %>" id="c<%= item.id %>" <% if item.expanded? %>checked="true"<% end %>/>
 		<label class="expander" for="c<%= item.id %>"></label>
 	<% end %>
-	<div class="tree_label item-name" data-parent-id="<%= itemId %>" data-item-id="<%= item.id %>" data-name="name" contenteditable="true" id="item_<%= item.id %>"><%= item.name %></div>
+	<div class="tree_label item-name" data-parent-id="<%= itemId %>" data-item-id="<%= item.id %>" data-name="name" contenteditable="true" id="item_<%= item.id %>" data-item-name="<%= item.name %>"><%= item.name %></div>
 	<ul class="children">
 		<% if item.hasChildren? && item.expanded? %>
 			<%= render 'item', itemId: item.id %>
