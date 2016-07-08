@@ -27,10 +27,7 @@
 				<h4>Tags</h4>
 			</li>
 			<div class="tags sidebar">
-					<%= render partial: 'topTenTag',  locals: {limit: 10} %>
-					<% if @totalTagNum > 10 %>
-					<input class="tag-search" data-provide="typeahead" placeholder="Search <%= @totalTagNum %> available tags">
-					<% end %>
+					<%= render partial: 'topTenTag',  locals: {limit: 10, projectId: @project.id } %>
 			</div>
 			<!-- <li class="sidebar-brand">
 				<h4>Filters</h4>

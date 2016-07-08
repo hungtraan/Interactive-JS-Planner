@@ -27,6 +27,7 @@ var localCacheTree = {};
 var localCacheDetail = {};
 var localCacheTags = {};
 var localCacheTagTree = {};
+var localCacheTagSidebar = {};
 
 $(document).ready(function() {
 	var loader = $('.loader');
@@ -544,7 +545,7 @@ $(document).ready(function() {
 
 	        $.ajax({
 	            method: "GET",
-	            url: "/get_tags_html",
+	            url: "/get_item_tags_html",
 	            data: {
 	                item_id: item_id,
 	            },
@@ -801,6 +802,25 @@ $(document).ready(function() {
 		}
 	};
 
+	var refreshTagSidebar = function(projectId){
+		if (localCacheTagSidebar[projectId] !== undefined){
+			$('div.tags.sidebar').html(localCacheTagSidebar[projectId]);
+		}
+		else{
+			$.ajax({
+				method: "GET",
+				url: "/get_top_tags_html",
+				data: {
+	            	project_id: projectId
+	            },
+				success: function(html){
+					$('div.tags.sidebar').html(html);
+					localCacheTagSidebar[projectId] = html;
+				}
+			});
+		}
+	};
+
 
 	// Tabs
 	var tabApp = tabApp || {};
@@ -901,6 +921,9 @@ $(document).ready(function() {
 			var $selectedTab = $(this),
 				$selectedProject = $projects.filter('[data-project-id=' + projectId + ']');
 			
+			// Refresh tag on sidebar
+			refreshTagSidebar(projectId);
+
 			// reverse the z-order
 			$tabs.each( function(k, v) {
 				$(v).css("z-index", $tabs.length - k);
@@ -916,6 +939,7 @@ $(document).ready(function() {
 			$('.project-title').attr('data-project-id', projectId);
 			$('.project-title').attr('data-project-name', projectName);
 			originalTreeHtml = $selectedProject.find('.root > ul.children').html();
+			
 
 			// Update the updated_at (to be sorted by)
 			$.ajax({

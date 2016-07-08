@@ -183,8 +183,13 @@ class OnepageController < ApplicationController
           }
         end
 	end
-	def getTagsHtml
+	def getItemTagsHtml
 		render partial: 'tag', locals: { itemId: params[:item_id], limit: params[:limit] }
+	end
+
+	def getTopTagsHtml
+		projectId = params[:project_id]
+		render partial: 'topTenTag',  locals: {limit: 10, projectId: projectId }
 	end
 
 	def createTag
@@ -243,11 +248,9 @@ class OnepageController < ApplicationController
 		rootChildren = Item.where(project: project).where(parent_id: [nil, 0]).order(order_index: :asc)
 		goDeeper = 1
 		rootChildren.each do |item|
-			if goDeeper == 1
-				# Ruby does not have pass by reference so we return 2 values
-				htmlToAdd, goDeeper = renderTreeWithTag(itemsWithSelectedTags, itemsFound, goDeeper, item, 0)
-				html += htmlToAdd
-			end
+			# Ruby does not have pass by reference so we return 2 values
+			htmlToAdd, goDeeper = renderTreeWithTag(itemsWithSelectedTags, itemsFound, goDeeper, item, 0)
+			html += htmlToAdd
 		end
 		render plain: html, :status => 200, :content_type => 'text/html'
 	end
