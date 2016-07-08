@@ -100,54 +100,15 @@
 			</div>
 
 			<div class="row tree-container">
-				<% 
+				<%
 				if @activeProjects.length != 0 
-					@activeProjects.each do |project| 
-						itemsWithNoParent = Item.where(project: project).where(parent_id: [nil, 0]).order(order_index: :asc)
-					%>
-					<div class="new-tree tree card col-md-12" data-project-id="<%= project.id %>">		
-						<ul class="tree" id="sortable">
-							<li class="item root" data-itemid="0" id="0">
-								<div class="root-fake-handler"></div>
-								<ul class="children">
-									<% if itemsWithNoParent.length != 0 %> 
-										<%= render partial: 'item', locals:{ itemId: 0, project: project } %>
-									<% else %>
-										<li class="item" id="item_">
-											<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>
-										</li>
-									<% end %>
-								</ul>
-							</li>
-						</ul>
-					</div>
-					<% end %>
-				<% 
-				else 
-					if @allProjects.length != 0 
-						project = @allProjects.first()
-						project.touch
-						itemsWithNoParent = Item.where(project: project).where(parent_id: [nil, 0]).order(order_index: :asc)
-					%>
-					<div class="new-tree tree card col-md-12" data-project-id>		
-						<ul class="tree" id="sortable">
-							<li class="item root" data-itemid="0" id="0">
-								<div class="root-fake-handler"></div>
-								<ul class="children">
-									<li class="item" id="item_">
-										<% if itemsWithNoParent && project %> 
-											<%= render partial: 'item', locals:{ itemId: 0, project: project } %>
-										<% else %>
-											<li class="item" id="item_">
-												<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>
-											</li>
-										<% end %>
-									</li>
-								</ul>
-							</li>
-						</ul>
-					</div>
-					<% end %>
+					@activeProjects.each do |project| %>
+						<%= render partial: 'tree', locals: { project: project } %>
+					<% end
+				elsif @allProjects.length != 0 
+					project = @allProjects.order(updated_at: :desc).first()
+					project.touch %>
+					<%= render partial: 'tree', locals: { project: project } %>
 				<% end %>
 				
 				<div class="object-editor closed card col-md-5">
@@ -201,9 +162,14 @@
 		</div>
 
 		<!-- Dialog box -->
-		<div id="dialog-confirm" title="Delete item with children?">
+		<div class = "dialog" id="dialog-confirm" title="Delete item with children?">
 			<p>
 				<span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>Removing this item will also remove its children. Are you sure?</p>
+		</div>
+
+		<div class = "dialog" id="dialog-delete-project" title="Delete item with children?">
+			<p>
+				<span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>Are you sure you want to delete this project? This cannot be undone.</p>
 		</div>
 		<!-- <footer>
 			<p>© 2016 Flashstarts, Inc.</p>

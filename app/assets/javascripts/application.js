@@ -32,7 +32,7 @@ $(document).ready(function() {
 	var loader = $('.loader');
 
 	// Save original tree in case later on user change it to view tags/filters
-	var originalTreeHtml = $('.root > ul.children').html();
+	var originalTreeHtml = $('.root > ul.children').first().html();
 
 	// $(this).toggleClass("textedit moveitem");
 	var firstLocationRemembered = 0;
@@ -61,46 +61,50 @@ $(document).ready(function() {
 	
 
 	// Support item sorting by drag and drop
-	$('#sortable').nestedSortable({
-        handle: 'i.mover',
-        helper:	'clone',
-        items: 'li',
-        toleranceElement: '> div',
-        // opacity: .6,
-        listType: 'ul',
-        forcePlaceholderSize: true,
-        placeholder: 'placeholder',
-        isTree: true, // to expand on hover
-        expandOnHover: 1500,
-		protectRoot: true,
-		rootID: 0,
-		tabSize: 25,
-		tolerance: 'pointer',
-		relocate: function(){
-			// serialized = $('#sortable').nestedSortable('serialize');
-			// console.log(serialized);
-			if (itemToMove.offset() !== oldPos){
-				// 1. Reorder the items within its parent
-				reorder(itemToMove);
-				var newParentId = itemToMove.parent('ul').parent('li').attr('data-itemid');
-				var possibleParent = itemToMove.parent('ul').parent('li');
-				if (newParentId != oldParentId){
-					// 2. Update children parent relationship
-					setChildrenParent(itemToMove.attr('data-itemid'), newParentId);
-					if (possibleParent.children('label.expander').length === 0){
-						var toPrepend = '<input type="checkbox" data-itemid="' + newParentId + '" id="c' + newParentId + '"><label class="expander" for="c'+newParentId+'"></label>';
-						$(toPrepend).prependTo(possibleParent);
-						possibleParent.children('input[type=checkbox]').prop('checked','true');
+	var dragnDrop = function(e){
+		$('.tree.sortable').nestedSortable({
+	        handle: 'i.mover',
+	        helper:	'clone',
+	        items: 'li',
+	        toleranceElement: '> div',
+	        // opacity: .6,
+	        listType: 'ul',
+	        forcePlaceholderSize: true,
+	        placeholder: 'placeholder',
+	        isTree: true, // to expand on hover
+	        expandOnHover: 1500,
+			protectRoot: true,
+			rootID: 0,
+			tabSize: 25,
+			tolerance: 'pointer',
+			relocate: function(){
+				// serialized = $('#sortable').nestedSortable('serialize');
+				// console.log(serialized);
+				if (itemToMove.offset() !== oldPos){
+					// 1. Reorder the items within its parent
+					reorder(itemToMove);
+					var newParentId = itemToMove.parent('ul').parent('li').attr('data-itemid');
+					var possibleParent = itemToMove.parent('ul').parent('li');
+					if (newParentId != oldParentId){
+						// 2. Update children parent relationship
+						setChildrenParent(itemToMove.attr('data-itemid'), newParentId);
+						if (possibleParent.children('label.expander').length === 0){
+							var toPrepend = '<input type="checkbox" data-itemid="' + newParentId + '" id="c' + newParentId + '"><label class="expander" for="c'+newParentId+'"></label>';
+							$(toPrepend).prependTo(possibleParent);
+							possibleParent.children('input[type=checkbox]').prop('checked','true');
+						}
 					}
 				}
-			}
-		},
-		// revert: function(){
-			
-		// }
-	});
-	$('[contenteditable=true]').unbind(); // to make contenteditable work again with nestedsortable
+			},
+			// revert: function(){
+				
+			// }
+		});
+		$('[contenteditable=true]').unbind(); // to make contenteditable work again with nestedsortable
+	};
 	
+	dragnDrop();
+
 	// Confirm deletion for deleting item with children
 	var confirmDelete = function(){ //only placeholder to be redefined later 
 	};
@@ -113,7 +117,7 @@ $(document).ready(function() {
 				$( this ).dialog( "close" );
 				confirmDelete();
 			},
-			Cancel: function() {
+			"Cancel": function() {
 				document.execCommand('undo');
 				$( this ).dialog( "close" );
 			}
@@ -124,20 +128,20 @@ $(document).ready(function() {
 	// Highlight and Load detail when clicking on an item in tree
 	$('.tree').on('click','.tree_label.item-name', function(event){
 		var editor = $('.object-editor');
-		if(!editor.hasClass('is-open')){
-			// $('.object-tree, .new-tree').toggleClass('col-md-12 col-md-6');
-			editor.removeClass('closed');
-			// editor.toggleClass('col-md-5');
-			editor.addClass('is-open');
-		}
 		if(!$(this).hasClass('selected')){
 			var item_id = $(this).attr('data-itemid');
-			if (item_id === '') {return;}
+			if (item_id === '' || item_id === undefined) {return;}
+			if(!editor.hasClass('is-open')){
+				// $('.object-tree, .new-tree').toggleClass('col-md-12 col-md-6');
+				editor.removeClass('closed');
+				// editor.toggleClass('col-md-5');
+				editor.addClass('is-open');
+			}
 			loadDetail($(this));
 		}
 		$('.tree_label.item-name').removeClass('selected');
 		$(this).addClass('selected');
-		event.stopImmediatePropagation();
+		// event.stopImmediatePropagation();
 	});
 
 	// Expand and get children via AJAX
@@ -199,7 +203,7 @@ $(document).ready(function() {
 		var originalDetail = element.text();
 		
 		element.focusout(function(event){
-			event.stopImmediatePropagation(); // This is SO important to prevent event bubbling and infinite recursion
+			event.stopImmediatePropagation(); // This is VERY important: prevent event bubbling
 			var contentText = element.text();
 			// console.log('out', element);
 
@@ -241,7 +245,6 @@ $(document).ready(function() {
 					setChildrenParent(element.attr('data-itemid'), possibleParentId);
 				}
 			}
-
 			
 			if (contentText !== originalDetail){
 				originalDetail = contentText;
@@ -508,7 +511,7 @@ $(document).ready(function() {
 	            method: "GET",
 	            url: "/get_tags_html",
 	            data: {
-	                item_id: item_id
+	                item_id: item_id,
 	            },
 	            success: function(html) {
 	            	localCacheTags[item_id] = html;
@@ -712,7 +715,8 @@ $(document).ready(function() {
 	// Tags
 	var selectedTagIds = [];
 	$('.tags.sidebar').on('click', '.tag', function(){
-		var tagId = parseInt($(this).attr('data-tagid'));
+		var tagId = parseInt($(this).attr('data-tagid')),
+			projectId = $('div.tree.active').attr('data-project-id');
 		if (!$(this).hasClass('highlight')){
 			$(this).addClass('highlight delete');
 			selectedTagIds.push(tagId);			
@@ -726,15 +730,15 @@ $(document).ready(function() {
 
 		if (selectedTagIds.length !== 0){
 			loader.addClass('enabled'); // Hide loader
-			redrawTreeWithNewTag(selectedTagIds);
+			redrawTreeWithNewTag(selectedTagIds, projectId);
 		} else {
-			$('.root > ul.children').html(originalTreeHtml);
+			$('div.tree.active > ul.tree > .root > ul.children').html(originalTreeHtml);
 		}
 	});
 
 	// Redraw $('.root > ul.children') with new tree including only
 	// items with selected tags
-	var redrawTreeWithNewTag = function(selectedTagIds){
+	var redrawTreeWithNewTag = function(selectedTagIds, projectId){
 		// Create a hash for the selection
 		var hash = selectedTagIds.sort().toString(); // simple hash function
 
@@ -749,11 +753,12 @@ $(document).ready(function() {
 				// contentType: "application/json; charset=utf-8",
 	            // dataType: 'json',
 	            data: {
-	            	tag_ids: selectedTagIds
+	            	tag_ids: selectedTagIds,
+	            	project_id: projectId
 	            },
 				success: function(html){
 					loader.removeClass('enabled'); // Hide loader
-					$('.root > ul.children').html(html);
+					$('div.tree.active > ul.tree > .root > ul.children').html(html);
 					localCacheTagTree[hash] = html;
 				}
 			});
@@ -775,11 +780,13 @@ $(document).ready(function() {
 	};
 				
 	tabApp.titleFocusOut = function(e){
-		$('.project-title').focusout(function(){
+		$('.title-menu').on('focusout', '.project-title', function(){
 			var $title = $('.project-title'),
 				projectName = $title.text(),
 				dataId = $title.attr('data-project-id'),
-				dataName = $title.attr('data-project-name');
+				dataName = $title.attr('data-project-name'),
+				$project = $('div.tree.active'),
+				$dropdownItems = $('.project-dropdown-item:not(.new-tab)');
 			// Create new project
 			if (dataId === undefined){
 				if (projectName.length !== 0){
@@ -787,13 +794,17 @@ $(document).ready(function() {
 						method: "POST",
 						url: "/create_project",
 						data: {
-							project_name: projectName 
+							project_name: projectName
 						},
 						success: function(json){
 							$title.attr('data-project-id', json.id);
-							$title.attr('data-project-name', json.name);
+							var html = '<li class="project-dropdown-item" data-project-id="' + json.id + '"><a href="#">' + projectName + '</a></li>';
+							$dropdownItems.last().after(html);
+							tabApp.activeProjects[json.id] = $project;
 						}
 					});
+					$title.attr('data-project-name', projectName);
+					$('.sublime-tabs__tab.active>a').text(projectName);
 				}
 			}
 			// Modify one
@@ -806,8 +817,10 @@ $(document).ready(function() {
 							project_name: projectName,
 							project_id: dataId
 						},
-						success: function(json){
-							$title.attr('data-project-name', json.name);
+						success: function(){
+							$title.attr('data-project-name', projectName);
+							$dropdownItems.filter('[data-project-id=' + dataId + ']').text(projectName);
+							$('.sublime-tabs__tab.active').text(projectName);
 						}
 					});
 				}
@@ -817,6 +830,7 @@ $(document).ready(function() {
 
 	tabApp.tabify = function() {
 		var activeClass = 'active',
+			// $tabContainer = $('.sublime-tabs'),
 			$tabs = $('.sublime-tabs__tab:not(.new-tab)'),
 			$links = $('.sublime-tabs__link'),
 			$projects = $('div.tree'),
@@ -824,25 +838,16 @@ $(document).ready(function() {
 			$newTab = $('.new-tab'),
 			$newTabTab = $('.sublime-tabs__tab.new-tab'),
 			$pageArea = $('.page-content-wrapper'),
-			$dropdownItem = $('.project-dropdown-item');
+			$dropdownItems = $('.project-dropdown-item'),
+			$deleteProject = $('.delete-project');
 
 		$tabs.each( function(k, v) {
 			var $thisTab = $(v),
 				projectId = $thisTab.attr('data-project-id');
-			tabApp.activeProjects[projectId] = $thisTab;	
+			tabApp.activeProjects[projectId] = $thisTab;
 		});
-		console.log(tabApp.activeProjects);
 		
-		$dropdownItem.on('click', 'li', function(e){
-			var projectId = $(this).attr('data-project-id');
-			if (tabApp.activeProjects[projectId] !== undefined){
-				// This project is opened, switch to it
-			}
-			else {
-				// This project is not opened, open it as a new tab
-			}
-		});
-		$tabs.on('click', function(e){
+		$tabs.on('click',function(e){
 			var projectId = $(this).attr('data-project-id'),
 				projectName = $(this).text().trim();
 			var $selectedTab = $(this),
@@ -862,7 +867,7 @@ $(document).ready(function() {
 			$('.project-title').text(projectName);
 			$('.project-title').attr('data-project-id', projectId);
 			$('.project-title').attr('data-project-name', projectName);
-			e.stopImmediatePropagation();
+			originalTreeHtml = $selectedProject.find('.root > ul.children').html();
 
 			// Update the updated_at (to be sorted by)
 			$.ajax({
@@ -890,7 +895,7 @@ $(document).ready(function() {
 
 			// Add new tab
 			var newTabHtml = "<li class=\"sublime-tabs__tab active\">\
-			        <a href=\"#\" class=\"sublime-tabs__link\" data-project-id=\"\">Untitled</a>\
+			        <a href=\"#\" class=\"sublime-tabs__link\">Untitled</a>\
 			        <i class=\"fa fa-times close-tab\" aria-hidden=\"true\"></i>\
 			      </li>";
 			$newTabTab.before(newTabHtml);
@@ -902,21 +907,22 @@ $(document).ready(function() {
 			$newTree.addClass(activeClass).css("z-index", $tabs.length + 2 );
 			
 			$newTree.find('ul.children').append('\
-				<li class="item" id="item_">\
+				<li class="item">\
 					<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>\
 				</li>');
 
 			// Add new tree (tab content)
 			$projects.last().after($newTree);
 			$newlyCreatedItem = $newTree.find('div.tree_label');
-			focusContentEditable($newlyCreatedItem);
-			tabApp.tabify(); // make new tab clickable
-			e.stopImmediatePropagation(); // prevent event bubbling due to previous tabify() call
-			tabApp.titleFocusOut();
 			$('.project-title')
 				.text('')
 				.attr('data-project-id', null)
 				.focus();
+			
+			focusContentEditable($newlyCreatedItem);
+			dragnDrop();
+			tabApp.tabify(); // make new tab clickable
+			// e.stopImmediatePropagation(); // prevent event bubbling due to previous tabify() call
 		});
 		
 		$closeBtn.on('click', function(){
@@ -927,9 +933,9 @@ $(document).ready(function() {
 			var activeProjectId =  $thisTab.attr('data-project-id');
 			$('.tree[data-project-id=' + activeProjectId + ']').remove();
 			if ($thisTab.hasClass(activeClass)){ // if close an active tab
-				if ($thisTab.prev().length !== 0){
+				if ($thisTab.next().length === 0){
 					$triggerTab = $thisTab.prev(); // then display its prev tab
-				} else if ($thisTab.next().length !== 0){
+				} else {
 					$triggerTab = $thisTab.next(); // then display its prev tab
 				}
 				$triggerTab.addClass(activeClass);
@@ -945,11 +951,93 @@ $(document).ready(function() {
 				},
 			});
 			$thisTab.remove();
+			delete tabApp.activeProjects[activeProjectId];
+		});
+
+		$deleteProject.on('click', function(){
+			$('#dialog-delete-project').dialog("open");
+		});
+
+		var deleteProject = function(projectId){
+			$.ajax({
+				method: "POST",
+				url: "/delete_project",
+				data: {project_id: projectId}
+			});
+		};
+
+		$('#dialog-delete-project').dialog({
+			resizable: false,
+			autoOpen: false,
+			modal: true,
+			buttons: {
+				"Delete": function() {
+					$( this ).dialog( "close" );
+					var projectId = $('div.tree.active').attr('data-project-id');
+					$('.sublime-tabs__tab.active i.close-tab').click();
+					deleteProject(projectId);
+					$('.project-dropdown-item[data-project-id=' + projectId + ']').remove();
+				},
+				"Cancel": function() {
+					$( this ).dialog( "close" );
+				}
+			}
+		});
+	};
+
+	tabApp.dropdown = function(){
+		var activeClass = 'active',
+			$tabs = $('.sublime-tabs__tab:not(.new-tab)'),
+			$projects = $('div.tree'),
+			$newTabTab = $('.sublime-tabs__tab.new-tab');
+
+		$('.dropdown-menu').on('click', '.project-dropdown-item', function(e){
+			var projectId = $(this).attr('data-project-id'),
+				projectName = $(this).text();
+			if (tabApp.activeProjects[projectId] !== undefined){
+				// This project is opened, switch to it
+				$('.sublime-tabs__tab[data-project-id=' + projectId + ']').click();
+			}
+			else {
+				// This project is not opened, open it as a new tab
+				$.ajax({
+					method: "GET",
+					url: "/get_project_html",
+					data: { project_id: projectId },
+					success: function(html){
+						$projects.last().after(html);
+						// Remove highlight from current tabs
+						$tabs = $('.sublime-tabs__tab:not(.new-tab)');
+						$tabs.each( function(k, v) {
+							$(v).css("z-index", $tabs.length - k);
+						})
+						.removeClass(activeClass);
+						$projects = $('div.tree'); // refresh
+						$projects.removeClass(activeClass);
+						$projects.last().addClass(activeClass);
+
+						// Add new tab
+						var newTabHtml = "<li class=\"sublime-tabs__tab active\" data-project-id=\"" + projectId + "\">\
+						        <a href=\"#\" class=\"sublime-tabs__link\" >" + projectName + "</a>\
+						        <i class=\"fa fa-times close-tab\" aria-hidden=\"true\"></i>\
+						      </li>";
+						$newTabTab.before(newTabHtml);
+						// $tabs = $('.sublime-tabs__tab:not(.new-tab)'); // refresh tab list
+						$newlyCreatedItem = $projects.last().find('div.tree_label');
+
+						focusContentEditable($newlyCreatedItem);
+						dragnDrop();
+						tabApp.tabify(); // make new tab clickable
+						e.stopImmediatePropagation(); // prevent event bubbling due to previous tabify() call
+					}
+				});
+			}
 		});
 	};
 
 	tabApp.highlightFirstTab();
 	tabApp.tabify();
+	tabApp.dropdown();
 	tabApp.titleFocusOut();
    
 	// END HELPER FUNCTIONS ==============================================

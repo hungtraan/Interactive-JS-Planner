@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   match 'get_tags_html' => 'onepage#getTagsHtml', via: :get
   match 'get_all_tags' => 'onepage#getAllTags', via: :get
   match 'get_item_from_tag' => 'onepage#getItemFromTag', via: :get
+  match 'get_project_html' => 'onepage#getProjectHtml', via: :get
   match 'update_individual_detail' => 'onepage#updateIndividualDetail', via: :post
   match 'create_item' => 'onepage#createItem', via: :post
   match 'delete_item' => 'onepage#deleteItem', via: :post

@@ -282,6 +282,16 @@ body{
 		.placeholder {
 			outline: 1px dashed #4183C4;
 		}
+
+		.delete-project{
+		    position: absolute;
+			right: 1em;
+			color: #777;
+			cursor: pointer;
+			&:hover{
+				color: #111;
+			}
+		}
 		/* ————————————————————–
 		  Tree core styles
 		*/

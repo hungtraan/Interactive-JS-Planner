@@ -1,0 +1,18 @@
+<% itemsWithNoParent = Item.where(project: project).where(parent_id: [nil, 0]) %> 
+<div class="new-tree tree card col-md-12" data-project-id="<%= project.id %>">
+	<i class="fa fa-trash-o delete-project" aria-hidden="true"></i>
+	<ul class="tree sortable">
+		<li class="item root" data-itemid="0" id="0">
+			<div class="root-fake-handler"></div>
+			<ul class="children">
+				<% if itemsWithNoParent.length != 0 %> 
+					<%= render partial: 'item', locals:{ itemId: 0, project: project } %>
+				<% else %>
+					<li class="item" id="item_">
+						<div class="tree_label item-name first-item-placeholder" placeholder="Click to input your first item" contenteditable="true" data-name="name"></div>
+					</li>
+				<% end %>
+			</ul>
+		</li>
+	</ul>
+</div>

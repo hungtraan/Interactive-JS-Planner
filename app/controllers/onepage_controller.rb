@@ -7,8 +7,9 @@ class OnepageController < ApplicationController
 
 		# 2. Get active projects to render
 		@activeProjects = Project.where(active: 1).order('updated_at desc').first(5)
-		@project = @activeProjects.first()
+		
 		@allProjects = Project.all
+		@project = (@activeProjects.length == 0) ?  @allProjects.first() : @activeProjects.first()
 		# add later: Display many tabs with active projects from last visit
 		@totalTagNum = Tag.count # To change: Only tags of display project
 	end
@@ -221,16 +222,17 @@ class OnepageController < ApplicationController
 
 	def getItemFromTag
 		tagIds = params[:tag_ids]
+		projectId = params[:project_id]
 		# render partial: 'treeWithTag', locals: { tagIds: tagIds }
 		html = ''
 		itemsFound = []
 		itemsWithSelectedTags = []
 		Tag.find(tagIds).each do |tag|
-			itemsWithSelectedTags += tag.item.ids
+			itemsWithSelectedTags += tag.items.ids
 		end
 		
-		p itemsWithSelectedTags
-		rootChildren = Item.where(parent_id: [nil, 0]).order(order_index: :asc)
+		project = Project.find(projectId)
+		rootChildren = Item.where(project: project).where(parent_id: [nil, 0]).order(order_index: :asc)
 		goDeeper = 1
 		rootChildren.each do |item|
 			if goDeeper == 1
@@ -283,6 +285,14 @@ class OnepageController < ApplicationController
         end
 	end
 
+	def getProjectHtml
+		projectId = params[:project_id]
+		project = Project.find(projectId)
+		project.active = 1
+		project.save
+		render partial: 'tree', locals: { project: project }
+	end
+
 	def updateProject
 		projectName = params[:project_name]
 		projectId = params[:project_id]
@@ -306,13 +316,20 @@ class OnepageController < ApplicationController
 					render :json => project
 	          }
 	        end
+	    else 
+	    	render plain: "Invalid Project", :status => 200, :content_type => 'text/html'
 		end
 	end
 
 	def deleteProject
 		projectId = params[:project_id]
-		
+
 		if Project.exists?(projectId)
+			project = Project.find(projectId)
+			items = Item.where(project: project)
+			items.each do |item|
+				Item.destroy(item.id)
+			end
 			Project.destroy(projectId)
 			render plain: "Project deleted", :status => 200, :content_type => 'text/html'
 		else
