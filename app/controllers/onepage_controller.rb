@@ -191,8 +191,8 @@ class OnepageController < ApplicationController
 			tag = Tag.find_by(tag: tag_name)
 			# If tag exists but not associated with item,
 			# then create this association
-			if !tag.item.exists?(item_id) && Item.exists?(item_id)
-				tag.item << Item.find(item_id)
+			if !tag.items.exists?(item_id) && Item.exists?(item_id)
+				tag.items << Item.find(item_id)
 				tag.save
 				render plain: tag.id, :status => 200, :content_type => 'text/html'
 			end
