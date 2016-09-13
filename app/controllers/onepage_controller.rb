@@ -285,6 +285,43 @@ class OnepageController < ApplicationController
 		return html, goDeeper
 	end
 
+	def renderTreeWithTagBFS(items)
+
+		items.each do |item|
+			itemsFound.push(item.id)
+			children = item.getChildrenObject
+			items += children
+		end
+
+		highlight = ""	
+		if itemsWithSelectedTags.include?(item.id)
+			itemsFound.push(item.id)
+			goDeeper = (itemsFound.length == itemsWithSelectedTags.length) ? 0:1
+			highlight = " selected-tag"
+		end
+
+		html = '<li class="item" data-item-id="' + item.id.to_s + '" id="item_' + item.id.to_s + '" data-parent-id="'+ parentId.to_s + '">'
+		html += '<i class="fa fa-bars mover" aria-hidden="true"></i>'
+		if item.hasChildren? && goDeeper
+			html = html + '<input type="checkbox" data-item-id="' + item.id.to_s + '" id="c' + item.id.to_s + '" checked="true"/>'
+			html = html + '<label class="expander" for="c' + item.id.to_s + '"></label>'
+		end
+		html = html + '<div class="tree_label item-name' + highlight + '" data-parent-id="' + parentId.to_s + '" data-item-id="' + item.id.to_s + '" data-name="name" contenteditable="true" id="item_' + item.id.to_s + '">' + item.name + '</div>'
+		html += '<ul class="children">'
+
+		if item.hasChildren? && goDeeper
+			children = item.getChildrenObject
+			children.each do |childItem|
+				htmlToAdd, goDeeper = renderTreeWithTag(itemsWithSelectedTags, itemsFound, goDeeper, childItem, item.id)
+				html += htmlToAdd
+			end
+		end
+		html += '</ul>'
+		html += '</li>'
+
+		return html, goDeeper
+	end
+
 	def createProject
 		projectName = params[:project_name]
 		project = Project.new(:name => projectName, :active => 1)
