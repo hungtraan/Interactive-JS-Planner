@@ -21,7 +21,7 @@ The application uses a MySQL database and AJAX to do real-time updates as the ap
 2. I learn to "grow away" from jQuery for future projects of this nature
     1. As much as I love prototyping this project with jQuery, code organization for element interactivity as well as dynamic data/state management is a pain. As features grow, the code grows much more since one click can result in several DOM & data updates.
     2. As the product is built to maximize user interactivity by leveraging real-time update, most updates are handled by jQuery `$().html()`, `$().data()` or `$().attr()` and saved to HTML data attributes (while `$.ajax)` updates the change to server). Or [this](http://take.ms/Gyxja).
-c. After surveying **AngularJS** or even **ReactJS**, similar implementation should be built around these models instead.
+    3. After surveying **AngularJS** or even **ReactJS**, similar implementation should be built around these models instead.
 3. Event bubbling in JS could cause **huge** performance problem if handled carelessly, e.g. in the `focusContentEditable()` function where it potentially has to call itself in many interactivity events
     1. In such case, don't forget to use `event.stopImmediatePropagation();` or `event.stopPropagation();`
     2. `stopPropagation()` prevents any parent handlers from being executed, `stopImmediatePropagation` does the same **and also** prevents other handlers from executing.
